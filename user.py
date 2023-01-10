@@ -670,7 +670,7 @@ def generate_name():
 	return f'{random.choice(colors)} {random.choice(fruits)}'
 
 if __name__ == "__main__":
-	mdb_connection_string = config.MDB_CONNECTION_STRING    
+	mdb_connection_string = config.MDB_CONNECTION_STRING
 	db_name = mdb_connection_string.split('/')[-1]
 	db = MongoClient(mdb_connection_string)[db_name]
 

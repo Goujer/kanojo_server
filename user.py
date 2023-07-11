@@ -71,13 +71,13 @@ class UserManager(object):
 			name = generate_name()
 		user = {
 				"create_time": tm,
+				"last_login": tm,
 				"birthday": birthday,
 				"id": uid,
 				"uuid": uuid,
 				"name": name,
 				"level": 1,
 				"money": 1000,
-				"sex": sex,
 				"stamina": 100,
 				"email": email,
 				"profile_image_url": None,
@@ -132,7 +132,6 @@ class UserManager(object):
 				"birth_month": 10,
 				"stamina_max": 100,
 				"profile_image_url": None,
-				"sex": "no sure",
 				"stamina": 100,
 				"money_max": 100,
 				"scan_count": 0,
@@ -168,18 +167,63 @@ class UserManager(object):
 			self.fill_fields(tmp_user)
 			allow_keys = ['id', 'name', 'level', 'money', 'sex', 'stamina', 'profile_image_url', 'scan_count', 'stamina_max', 'relation_status', 'kanojo_count', 'friend_count', 'enemy_count', 'generate_count']
 			if clear == CLEAR_SELF:
-				allow_keys.extend(['email', 'password', 'tickets', 'language', 'birth_day', 'birth_month', 'birth_year', 'description'])
+				allow_keys.extend(['tickets', 'language', 'birth_day', 'birth_month', 'birth_year', 'description'])
 				if self_uid is None:
 					self_uid = tmp_user.get('id')
 			rv = { key: tmp_user[key] for key in allow_keys if key in tmp_user }
 			if self_uid:
 				if self_uid == tmp_user.get('id'):
-					rv['relation_status'] = 2
+					rv['relation_status'] = USER_RELATION_SELF
 				else:
 					self_user = self.user(uid=self_uid, clear=CLEAR_NONE)
 			if self_user:
-				rv['relation_status'] = 2 if self_user.get('id')==tmp_user.get('id') else 3 if tmp_user.get('id') in self_user.get('enemies') else 1
+				rv['relation_status'] = USER_RELATION_SELF if self_user.get('id') == tmp_user.get('id') else USER_RELATION_ENEMY if tmp_user.get('id') in self_user.get('enemies') else USER_RELATION_OTHER
 			return OrderedDict(sorted(list(rv.items()), key=cmp_to_key(user_order_dict_cmp)))
+
+	def login(self, uuid, email=None, password=None):
+		query = {
+			"uuid": {
+				"$exists": True,
+				"$eq": uuid
+			}
+		}
+		user = self.db.users.find_one(query)
+		if user:
+			# TODO This will need to be removed after enough user migration
+			last_login = user.get('last_login', 0)
+			if last_login == 0:
+				user['last_login'] = int(time.time())
+				self.save(user)
+			#End of TODO
+			if time.time() - user.get('last_login', 0) > 31556952: #Seconds in a year
+				return None
+			else:
+				user['last_login'] = int(time.time())
+				self.save(user)
+		elif email and password:
+			query = {
+				"$and": [
+					{"email": {
+						"$exists": True,
+						"$eq": email
+					}},
+					{"password": {
+						"$exists": True,
+						"$eq": password.capitalize()
+					}}
+				]
+			}
+			user = self.db.users.find_one(query)
+			if user:
+				user['uuid'] = uuid
+				user['last_login'] = time.time()
+				self.save(user)
+			else:
+				return None
+		if not user:
+			return None
+		else:
+			return self.clear(user, clear=CLEAR_SELF, self_uid=None, self_user=None)
 
 	def user(self, uuid=None, uid=None, self_uid=None, self_user=None, clear=CLEAR_SELF, email=None, password=None):
 		if not self.db:

@@ -621,9 +621,9 @@ def acc_verify():
 	email = prms.get('email')
 	password = prms.get('password')
 	if uuid:
-		user = user_manager.user(uuid=uuid, email=email, password=password)
+		user = user_manager.login(uuid=uuid, email=email, password=password)
 		if not user:
-			return jsonify({ "code": 404 })
+			return jsonify({ "code": 404, "alerts": [{"body": "User not found", "title": "Warning"}]})
 		session['id'] = user.get('id')
 		return jsonify({ "code": 200, "user": user })
 	else:
@@ -635,7 +635,7 @@ def acc_signup():
 	uuid = prms.get('uuid')
 	name = prms.get('name', generate_name())
 	password = prms.get('password')
-	email = prms.get('email')
+	email = prms.get('email').lower()
 	birthday = int(time.mktime(time.strptime('%s-%s-%s 12:00:00' % (prms.get('birth_year', 1990), prms.get('birth_month', 1), prms.get('birth_day', 1)), '%Y-%m-%d %H:%M:%S'))) - time.timezone
 	sex = prms.get('sex', 'Not Sure')
 	profile_image_data = prms.get('profile_image_data')
@@ -668,7 +668,7 @@ def acc_delete():
 		if user_id == session['id']:
 			user = user_manager.delete_user(uid=user_id)
 			if user:
-				return jsonify({"code": 200, "user": user})
+				return jsonify({"code": 200, "user": user, 'alerts': [{'body': f'User has been deleted', 'title': 'Info'}]})
 			else:
 				return jsonify({"code": 500})
 		else:
@@ -1323,8 +1323,20 @@ def account_update():
 		self_user['password'] = prms['new_password']
 		updated = True
 	if 'email' in prms:
-		self_user['email'] = prms['email']
-		updated = True
+		newEmail = prms['email'].lower()
+		if newEmail != self_user['email']:
+			query = {
+				"email": {
+					"$exists": True,
+					"$eq": newEmail
+				}
+			}
+			existing_user = db.users.find_one(query)
+			if existing_user:
+				return jsonify({"code": 400, "alerts": [{"body": "Email already in use.", "title": ""}]})
+			else:
+				self_user['email'] = prms['email']
+				updated = True
 	if 'birth_year' in prms and 'birth_month' in prms and 'birth_day' in prms:
 		self_user['birthday'] = int(time.mktime(time.strptime('%s-%s-%s 12:00:00'%(prms['birth_year'], prms['birth_month'], prms['birth_day'] ), '%Y-%m-%d %H:%M:%S'))) - time.timezone
 		updated = True

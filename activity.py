@@ -252,7 +252,7 @@ class ActivityManager(object):
 			f = {}
 			if a.get('kanojo'):
 				if FILL_TYPE_PLAIN == fill_type:
-					f['kanojo_name'] = a['kanojo'].get('name').encode('utf-8')
+					f['kanojo_name'] = a['kanojo'].get('name')
 					f['product_name'] = a['kanojo'].get('product_name')
 					f['nationality'] = a['kanojo'].get('nationality')
 				elif FILL_TYPE_HTML == fill_type:
@@ -263,7 +263,7 @@ class ActivityManager(object):
 						f['kanojo_name'] = '%s'%escape(a['kanojo'].get('name'))
 			if a.get('user'):
 				if FILL_TYPE_PLAIN == fill_type:
-					f['user_name'] = a['user'].get('name').encode('utf-8')
+					f['user_name'] = a['user'].get('name')
 				elif FILL_TYPE_HTML == fill_type:
 					a['user_url'] = '/user/%d.html'%a['user'].get('id')
 					if a['user'].get('id'):
@@ -273,7 +273,7 @@ class ActivityManager(object):
 				f['user_level'] = a['user'].get('level')
 			if a.get('other_user'):
 				if FILL_TYPE_PLAIN == fill_type:
-					f['other_user_name'] = a['other_user'].get('name').encode('utf-8')
+					f['other_user_name'] = a['other_user'].get('name')
 				elif FILL_TYPE_HTML == fill_type:
 					a['other_user_url'] = '/user/%d.html'%a['other_user'].get('id')
 					if a['other_user'].get('id'):

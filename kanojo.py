@@ -161,16 +161,6 @@ class KanojoManager(object):
 			return self.create(barcode_info, params, owner_user)
 		return kanojo
 
-	def bits2int(self, data, bit_start, bit_end):
-		last_bits_move = 8-((bit_end) % 8)
-		first_bits_move = ((bit_start) % 8)
-
-		rv = data[int(bit_start/8)] & ~(-1 << (8 - first_bits_move))
-		for i in range(int(bit_start/8), int(bit_end/8)):
-			rv = rv << 8 | data[i+1]
-		rv = rv >> last_bits_move
-		return rv
-
 	def generate(self, barcode):
 		'''
 			Generate kanojo params from barcode
@@ -180,8 +170,8 @@ class KanojoManager(object):
 		if not barcode or len(barcode)==0:
 			return None
 
-		secretIndex = len(self.generate_secret)//2
-		bc = ('%s%s%s'%(self.generate_secret[:secretIndex], barcode, self.generate_secret[secretIndex:])).encode('utf-8')
+		secretIndex = int(len(self.generate_secret)/2)
+		bc = f'{self.generate_secret[:secretIndex]}{barcode}{self.generate_secret[secretIndex:]}'.encode('utf-8')
 		hash_arr = bytearray(hashlib.md5(bc).digest())
 
 		rv = { 'barcode': barcode, 'body_type': 1 }
@@ -232,6 +222,16 @@ class KanojoManager(object):
 			rv[order[0]] = _min + val % l
 			#print '%s: %d(%d), %d-%d(%d) %d-%d'%(order[0], rv[order[0]], val, _min, _max, l, bit_start, bit_end)
 			del order[0]
+		return rv
+
+	def bits2int(self, byte_arr, bit_start, bit_end):
+		last_bits_move = 8-(bit_end % 8)
+		first_bits_move = (bit_start % 8)
+
+		rv = byte_arr[int(bit_start/8)] & ~(-1 << (8 - first_bits_move))
+		for i in range(int(bit_start/8), int(bit_end/8)):
+			rv = rv << 8 | byte_arr[i+1]
+		rv = rv >> last_bits_move
 		return rv
 
 	def save(self, kanojo):

@@ -209,7 +209,7 @@ class UserManager(object):
 					}},
 					{"password": {
 						"$exists": True,
-						"$eq": password.capitalize()
+						"$eq": password
 					}}
 				]
 			}
@@ -248,7 +248,7 @@ class UserManager(object):
 							}},
 							{"password": {
 								"$exists": True,
-								"$eq": password.capitalize()
+								"$eq": password
 							}}
 						]
 					}

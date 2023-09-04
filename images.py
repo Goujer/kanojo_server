@@ -83,7 +83,7 @@ def save_kanojo_profile_image(img_data, kid):
 	cr = im.crop((im.width*0.1875, 0.00, im.width*0.8125, im.width*0.625))	#Good for bust image (v1 style icon). This has been verified by Kanojo Wars site.
 	dt = io.BytesIO()
 	cr.save(dt, format="png")
-	save_image(dt.getvalue(), filename=os.path.join(destination, 'iconv1.png'))
+	save_image(dt.getvalue(), filename=os.path.join(destination, 'bust.png'))
 	dt.close()
 
 	dt = io.BytesIO()

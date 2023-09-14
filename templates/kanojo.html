@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", ready);
 {% if len_zero(followers) %}<div class="msg_small_alert">KANOJO doesn't have Follower.</div>{% else %}
 {% for u in followers %}{% if is_dict(u) %}			<span>
 				<a href="/user/{{ u.id }}.html">
-					<img class="icon" src="{{ u.profile_image_url }}" alt="{{ u.name }}" style="width: 50px; height: 50px;">
+					<img class="icon" src="/profile_images/user/{{ owner_user.id }}.jpg" alt="{{ u.name }}" style="width: 50px; height: 50px;">
 				</a>
 			</span>
 {% endif %}{% endfor %}

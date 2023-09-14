@@ -1,8 +1,48 @@
 /*
 	Used for web pages: kanojo and user
 */
+@charset"UTF-8";
 body {
-  line-height: 18px;
+	margin:0;
+	padding:0;
+	text-align:center;
+	background:#FF3399;
+	background-image:url(/images/common/bg_image_body.png);
+	background-position:top;background-repeat:repeat-x;
+}
+#container {
+	width:970px;
+	margin:0px auto;
+	padding:0px;
+	border:0px solid #000000;
+	text-align:left;
+}
+
+/* typeface */
+a:link {
+	color: #0099FF;
+	text-decoration: none;
+}
+a:hover {
+	color:#00CCFF;
+	text-decoration:underline;
+}
+a:active {
+	color:#FFFFFF;
+	text-decoration:underline;
+}
+a:visited {
+	color: #0099FF;
+	text-decoration: none;
+}
+body {
+	color:#555;
+	font-family:Helvetica, sans-serif, Arial, "ヒラギノ角ゴ Pro W3","ＭＳ Ｐゴシック", Osaka,"Hiragino Sans GB W3","Heiti SC Medium";
+	font-size:14px;
+	font-variant:normal;
+	font-style:normal;
+	font-weight:normal;
+	line-height:18px;
 }
 h1 {
   line-height: 24px;
@@ -14,6 +54,39 @@ h1 {
   margin: 0px 0px 0px 0px;
   padding: 0px;
 }
+h2 {
+	line-height:22px;
+	font-size:20px;
+	font-variant:normal;
+	font-style:normal;
+	font-weight:bolder;
+	margin:0px 0px 0px 0px;
+	padding:0px;}
+h3 {
+	line-height:16px;
+	font-size:16px;
+	font-variant:normal;
+	font-style:normal;
+	font-weight:bolder;
+	margin:0px 0px 0px 0px;
+	padding:0px;}
+h4 {
+	line-height:14px;
+	font-size:14px;
+	font-variant:normal;
+	font-style:normal;
+	font-weight:bolder;
+	margin:0px 0px 0px 0px;
+	padding:0px;}
+h5 {
+	line-height:12px;
+	font-size:12px;
+	font-variant:normal;
+	font-style:normal;
+	font-weight:bolder;
+	margin:0px 0px 0px 0px;
+	padding:0px;}
+
 #maincontent {
   text-align: left;
   padding: 0px 20px 10px 0px;
@@ -38,7 +111,7 @@ h1 {
   text-align: left;
   display: table;
   position: relative;
-/*  background-image: url(/img/bg_activity.png);*/
+  background-image: url(/images/common/bg_activity.png);
   background-position: 0px 0px;
   background-repeat: repeat-x;
   border-bottom: solid 1px #DDD;
@@ -68,7 +141,7 @@ h1 {
   -webkit-border-radius: 5px;
   padding: 0px;
   margin: 4px 8px 4px 0px;
-/*  background-image: url(/img/bg_kj_portrate.png);*/
+	background-image: url(/images/common/bg_kj_portrate.png);
   background-position: top;
   background-repeat: repeat-x;
 }
@@ -104,6 +177,8 @@ table td tr {
 .bb_indicator {
   height: 12px;
   background-color: #EEE;
+	background-image:url(/images/common/bg_ind.png);
+	background-repeat:repeat;
   border: #999 1px solid;
   -moz-box-shadow: 0 0px 0px #BBBBBB;
   -webkit-box-shadow: 0 0px 0px #BBBBBB;
@@ -120,12 +195,4 @@ table td tr {
   font-size: 12px;
   line-height: 16px;
   padding-left: 15px;
-}
-a:visited {
-  color: #0099FF;
-  text-decoration: none;
-}
-a:link {
-  color: #0099FF;
-  text-decoration: none;
 }

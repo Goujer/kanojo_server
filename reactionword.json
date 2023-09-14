@@ -44,8 +44,7 @@
 		},
 		{
 			"data": ["This time…", "I give you something.", "What do you want…?"],
-			"a": [1],
-			"pod": [0]
+			"a": [1]
 		},
 		{
 			"data": ["Thank you…", "This is like a dream…", "…I'm really happy."],
@@ -69,8 +68,7 @@
 		},
 		{
 			"data": ["This…what does it mean?", "I'm sorry but…", "There's no reason to give me this."],
-			"a": [1],
-			"pod": [2]
+			"a": [1]
 		},
 		{
 			"data": ["Really?", "There's no reason for you to give me that.", "You insist? Alright, thanks."],
@@ -130,13 +128,11 @@
 		},
 		{
 			"data": ["Th, this…", "I like stuff like this.", "But is it really okay?"],
-			"a": [1],
-			"pod": [0]
+			"a": [1]
 		},
 		{
 			"data": ["This…?", "Is for me?", "Really!?"],
-			"a": [1],
-			"pod": [2]
+			"a": [1]
 		},
 		{
 			"data": ["What's this…?", "Wonder what it is.", "I want to open it."],
@@ -153,13 +149,12 @@
 		{
 			"data": ["Good Morning.", "…I can’t accept this.", "…Alright, if you insist."],
 			"a": [1, 2],
-			"pod": [0]
+			"pod": [1]
 		},
 		{
 			"data": ["Hey.", "What? It’s not a special occasion, is it?", "Thank you…I’m going to take care of it."],
 			"a": [1, 2]
 		},
-
 		{
 			"data": [ "You didn’t have to.",  "All I want is you…",  "That’s all I need to be happy." ],
 			"a": [1,2]
@@ -554,7 +549,8 @@
 		},
 		{
 			"data": ["Finally get to see you…", "I don’t ever want to leave you.", "You're gonna be with me til the morning, right?"],
-			"a": [3]
+			"a": [3],
+			"pod": [0,3]
 		},
 		{
 			"data": ["Since yesterday…", "I’ve missed you.", "Be mine forever."],
@@ -1526,7 +1522,7 @@
 			"a": [21]
 		},
 		{
-			"data": ["The way you touch me seems like you’ve had practice.", "Am I just imagining things?", "i wonder what it is."],
+			"data": ["The way you touch me seems like you’ve had practice.", "Am I just imagining things?", "I wonder what it is."],
 			"a": [20,21]
 		},
 		{
@@ -2602,7 +2598,8 @@
 		},
 		{
 			"data": ["If it wasn’t so early in the morning…", "I wonder if your kisses would be rougher…?", "…"],
-			"a": [20,21]
+			"a": [20,21],
+			"pod": [1]
 		},
 		{
 			"data": ["Oh, what was that?", "Does that mean,", "You like me?"],
@@ -2630,10 +2627,10 @@
 		},
 		{
 			"data": ["…Hey.", "Whoa, what are you doing.", "You're being too touchy."],
-			"a": [10,11,12]
+			"a": [10,12,21]
 		},
 		{
-			"data": ["Sorry.", "Not on the lips.", "I’m keeping this for my boyfriend."],
+			"data": ["Sorry.", "Not on the lips.", "I’m keeping this for my partner."],
 			"a": [20]
 		},
 		{
@@ -2641,8 +2638,8 @@
 			"a": [20,21]
 		},
 		{
-			"data": ["I have butterflies in my stomach…", "It’s not even the first time someone has petted me.", "I wonder if it’s because it’s you…"],
-			"a": [21]
+			"data": ["I have butterflies in my stomach…", "It’s not even the first time someone has pet me.", "I wonder if it’s because it’s you…"],
+			"a": [12]
 		},
 		{
 			"data": ["H, hey!", "I'm sorry!", "(Runs away)"],
@@ -2728,7 +2725,8 @@
 		},
 		{
 			"data": ["Ah!", "You scared me.", "You can’t kiss me like that, not this early in the morning."],
-			"a": [20]
+			"a": [20],
+			"pod": [1]
 		},
 		{
 			"data": ["…Hey.", "Did you just…", "You perv!"],
@@ -2892,7 +2890,8 @@
 		},
 		{
 			"data": ["What…? Hey.", "I’m not a morning person.", "Why would you do that!"],
-			"a": [20,21]
+			"a": [20,21],
+			"pod": [1]
 		},
 		{
 			"data": ["…Hey.", "…", "What are you doing!"],
@@ -2981,7 +2980,7 @@
 			"a": [20,21]
 		},
 		{
-			"data": ["…!!", "Stop it!!!", "(He's gonna know my heart's going crazy!)"],
+			"data": ["…!!", "Stop it!!!", "(They're gonna know my heart's going crazy!)"],
 			"a": [20,21]
 		},
 		{
@@ -3018,7 +3017,7 @@
 		},
 		{
 			"data": ["Um!?", "Hey.", "You can't kiss me suddenly like that."],
-			"a": [20,21]
+			"a": [20]
 		},
 		{
 			"data": ["Hey.", "What are you doing!", "We’re not in that kind of relationship!"],
@@ -3139,10 +3138,6 @@
 		},
 		{
 			"data": ["Mm…", "Your kiss…", "Is really sweet…"],
-			"a": [20,21]
-		},
-		{
-			"data":  [ "Mm…", "Your kiss…",  "Is really sweet…" ],
 			"a": [20]
 		}
 	]

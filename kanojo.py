@@ -246,7 +246,7 @@ class KanojoManager(object):
 				else:
 					kanojo.pop('date_info', None)
 
-			return self.db.kanojos.update_one(kanojo)
+			return self.db.kanojos.self.db.users.replace_one({'_id', kanojo['_id']}, kanojo)
 		return False
 
 	@property

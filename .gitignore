@@ -4,3 +4,4 @@ venv
 config.py
 /profile_images/
 .idea/
+/log/

@@ -483,7 +483,7 @@ def generate_barcode():
 		break
 	barcode['barcode'] = bc
 	barcode['timestamp'] = int(time.time())
-	db.barcode_tmp.self.db.users.replace_one({'barcode', barcode['barcode']}, barcode, upsert=True)
+	db.barcode_tmp.self.db.users.replace_one({'barcode', barcode['barcode']}, barcode, True)
 
 	rv = { 'code': 200 }
 	rv['barcode'] = bc
@@ -627,7 +627,7 @@ def acc_verify():
 		client_data = {'client':ip_hash,
 						'api':int(api),
 						'language':language}
-		db['analytics'].replace_one({'client': ip_hash}, client_data, upsert=True)
+		db['analytics'].replace_one({'client': ip_hash}, client_data, True)
 	if uuid:
 		user = user_manager.login(uuid=uuid, email=email, password=password)
 		if not user:

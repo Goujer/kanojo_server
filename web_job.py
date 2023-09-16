@@ -483,7 +483,7 @@ def generate_barcode():
 		break
 	barcode['barcode'] = bc
 	barcode['timestamp'] = int(time.time())
-	db.barcode_tmp.self.db.users.replace_one({'barcode', barcode['barcode']}, barcode, True)
+	db.barcode_tmp.self.db.users.replace_one({'barcode': barcode['barcode']}, barcode, True)
 
 	rv = { 'code': 200 }
 	rv['barcode'] = bc

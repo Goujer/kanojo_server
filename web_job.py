@@ -483,10 +483,7 @@ def generate_barcode():
 		break
 	barcode['barcode'] = bc
 	barcode['timestamp'] = int(time.time())
-	if db.barcode_tmp.find_one({ 'barcode': bc }):
-		db.barcode_tmp.update_one(barcode)
-	else:
-		db.barcode_tmp.insert_one(barcode)
+	db.barcode_tmp.self.db.users.replace_one({'barcode', barcode['barcode']}, barcode, upsert=True)
 
 	rv = { 'code': 200 }
 	rv['barcode'] = bc
@@ -625,18 +622,12 @@ def acc_verify():
 	password = prms.get('password')
 	api = prms.get('api')
 	language = prms.get('language')
-	ip_hash = hashlib.md5(get_remote_ip().encode('utf-8'), usedforsecurity=False).hexdigest()
 	if api and language:
-		client_data = db.analytics.find_one({'client': ip_hash})
-		if client_data:
-			client_data['api'] = int(api)
-			client_data['language']=language
-			db.analytics.update_one(client_data)
-		else:
-			client_data = {'client': ip_hash,
-							'api': int(api),
-							'language': language}
-			db['analytics'].insert_one('client_data')
+		ip_hash = hashlib.md5(get_remote_ip().encode('utf-8'), usedforsecurity=False).hexdigest()
+		client_data = {'client':ip_hash,
+						'api':int(api),
+						'language':language}
+		db['analytics'].replace_one({'client': ip_hash}, client_data, epsert=True)
 	if uuid:
 		user = user_manager.login(uuid=uuid, email=email, password=password)
 		if not user:

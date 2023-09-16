@@ -627,7 +627,7 @@ def acc_verify():
 		client_data = {'client':ip_hash,
 						'api':int(api),
 						'language':language}
-		db['analytics'].replace_one({'client': ip_hash}, client_data, epsert=True)
+		db['analytics'].replace_one({'client': ip_hash}, client_data, upsert=True)
 	if uuid:
 		user = user_manager.login(uuid=uuid, email=email, password=password)
 		if not user:

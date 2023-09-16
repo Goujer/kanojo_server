@@ -2,4 +2,5 @@
 venv
 *.pyc
 config.py
-
+/profile_images/
+.idea/

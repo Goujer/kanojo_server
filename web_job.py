@@ -59,7 +59,7 @@ kanojo_manager = KanojoManager(db,
 				)
 store = StoreManager()
 activity_manager = ActivityManager(db=db)
-user_manager = UserManager(db, server=app.config['SERVER_NAME'], kanojo_manager=kanojo_manager, store=store, activity_manager=activity_manager)
+user_manager = UserManager(db, kanojo_manager=kanojo_manager, store=store, activity_manager=activity_manager)
 geoIP = GeoIP(db, secret1=config.GEOIP_SECRET1, secret2=config.GEOIP_SECRET2, secret3=config.GEOIP_SECRET3)
 reactionword = ReactionwordManager()
 
@@ -191,7 +191,7 @@ def post():
 					'id': 1
 				}
 			try:
-				db.seqs.insert(pid)
+				db.seqs.insert_one(pid)
 			except pymongo.errors.DuplicateKeyError as e:
 				abort(500)
 		post = {
@@ -203,10 +203,10 @@ def post():
 		if pwd:
 			post['password'] = sha224(pwd).hexdigest()
 		if reject_rule is None:
-			db.posts.insert(post)
+			db.posts.insert_one(post)
 		else:
 			post['reject_rule'] = reject_rule
-			db.posts_rejected.insert(post)
+			db.posts_rejected.insert_one(post)
 			return 'You are banned for this thread.'
 
 	return redirect("/", code=302)
@@ -294,7 +294,7 @@ def last_kanojos():
 			if kid.isdigit():
 				kid = int(kid)
 		if isinstance(kid, int):
-			i['url'] = 'http://www.barcodekanojo.com/kanojo/%d/%s'%(kid, i.get('name', '_'))
+			i['url'] = f'http://www.barcodekanojo.com/kanojo/{kid}/{i.get("name", "_")}'
 		data['kanojos'].append(i)
 	return json_response(data)
 
@@ -328,7 +328,7 @@ def add_job():
 			dt['users'] = users
 		if len(kanojos):
 			dt['kanojos'] = kanojos
-		db2.save_jobs.insert(dt)
+		db2.save_jobs.insert_one(dt)
 	return render_template('add_job.html', **val)
 
 '''
@@ -348,7 +348,7 @@ def images_profile_bkgr(fn):
 
 @app.route('/images/<path:path>', methods=['GET'])
 def images_dir(path):
-	filename = '%s/images/%s'%(app.static_folder, path.lower())
+	filename = f'{app.static_folder}/images/{path.lower()}'
 	if os.path.isfile(filename):
 		return send_file(filename)
 	abort(404)
@@ -437,7 +437,7 @@ def _genarete_barcode(bid):
 			sum2 += int(digit)
 		i = i+1
 	rv = (10 - (sum2*3 + sum1) % 10) % 10
-	return '%s%d'%(str12, rv)
+	return f'{str12}{rv:d}'
 
 @app.route('/generate_barcode.json', methods=['POST'])
 def generate_barcode():
@@ -470,12 +470,12 @@ def generate_barcode():
 					'id': 1
 				}
 			try:
-				db.seqs.insert(bid)
+				db.seqs.insert_one(bid)
 			except pymongo.errors.DuplicateKeyError as e:
-				return json_response({ 'code': 500 })
+				return jsonify({ 'code': 500 })
 		bid = bid.get('id')
 		if bid > 9999999999:
-			return json_response({ 'code': 500 })
+			return jsonify({ 'code': 500 })
 		bc = _genarete_barcode(bid)
 		q = { 'barcode': bc }
 		if db.kanojos.find_one(q) or db.barcode_tmp.find_one(q):
@@ -483,7 +483,10 @@ def generate_barcode():
 		break
 	barcode['barcode'] = bc
 	barcode['timestamp'] = int(time.time())
-	db.barcode_tmp.save(barcode)
+	if db.barcode_tmp.find_one({ 'barcode': bc }):
+		db.barcode_tmp.update_one(barcode)
+	else:
+		db.barcode_tmp.insert_one(barcode)
 
 	rv = { 'code': 200 }
 	rv['barcode'] = bc
@@ -518,7 +521,7 @@ def last_activity():
 	kids = activity_manager.kanojo_ids(activities)
 
 	users = user_manager.users(uids)
-	kanojos = kanojo_manager.kanojos(kids, request.host_url)
+	kanojos = kanojo_manager.kanojos(kids)
 
 	activities = activity_manager.fill_activities(activities, users, kanojos, user_manager.default_user, kanojo_manager.default_kanojo, fill_type=1)
 
@@ -552,7 +555,7 @@ def user_html(uid):
 	kids.extend(activity_manager.kanojo_ids(activities))
 	uids = list(set(uids))
 	kids = list(set(kids))
-	kanojos = kanojo_manager.kanojos(kids, request.host_url)
+	kanojos = kanojo_manager.kanojos(kids)
 	users = user_manager.users(uids)
 
 	for i in range(min(18, len(user.get('kanojos')))):
@@ -578,10 +581,10 @@ def kanojo_html(kid):
 		kid = int(kid)
 	except ValueError as e:
 		return abort(400)
-	kanojo = kanojo_manager.kanojo(kid, request.host_url, clear=CLEAR_NONE)
+	kanojo = kanojo_manager.kanojo(kid, clear=CLEAR_NONE)
 	if kanojo is None:
 		abort(404)
-	kanojo = kanojo_manager.fill_fields(kanojo, request.host_url)
+	kanojo = kanojo_manager.fill_fields(kanojo)
 	kanojo.pop('_id', None)
 
 	uids = copy.copy(kanojo.get('followers'))
@@ -620,6 +623,20 @@ def acc_verify():
 	uuid = prms.get('uuid')
 	email = prms.get('email')
 	password = prms.get('password')
+	api = prms.get('api')
+	language = prms.get('language')
+	ip_hash = hashlib.md5(get_remote_ip(), usedforsecurity=False).hexdigest()
+	if api and language:
+		client_data = db.analytics.find_one({'client': ip_hash})
+		if client_data:
+			client_data['api'] = int(api)
+			client_data['language']=language
+			db.analytics.update_one(client_data)
+		else:
+			client_data = {'client': ip_hash,
+							'api': int(api),
+							'language': language}
+			db['analytics'].insert_one('client_data')
 	if uuid:
 		user = user_manager.login(uuid=uuid, email=email, password=password)
 		if not user:
@@ -685,34 +702,52 @@ def account_show():
 	else:
 		return jsonify({ "code": 404 })
 
+
+#TODO Fix Search
 @app.route('/user/current_kanojos.json', methods=['GET','POST'])
 def user_currentkanojos():
 	#kanojo_manager.server = request.url_root[:-1]
 	kanojo_manager.server = server_url()[:-1]
+
 	if 'id' not in session:
-		return json_response({ "code": 401 })
+		return jsonify({ "code": 401 })
+
 	prms = request.form if request.method == 'POST' else request.args
 	if prms.get('user_id') is None or prms.get('index') is None or prms.get('limit') is None:
 		return json_response({ "code": 400 })
 	user_id = int(prms.get('user_id'))
 	index = int(prms.get('index'))
 	limit = int(prms.get('limit'))
-	# TODO: search doesn't work
 	search = prms.get('search')
 	user = user_manager.user(uid=user_id, clear=CLEAR_NONE)
 	if user is None:
-		return json_response({ "code": 200, "user": user })
-	rspns = { "code": 200 }
+		return jsonify({ "code": 200, "user": user })
+
+	rspns = {"code":200}
+
 	kanojos_ids = user.get('kanojos')
 	current_kanojos = []
-	if index < len(kanojos_ids):
+
+	if search is not None:
+		self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
+		current_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, search=search, self_user=self_user, clear=CLEAR_NONE)
+		if index < len(current_kanojos):
+			current_kanojos = []
+		else:
+			if (index + limit) > len(current_kanojos):
+				current_kanojos = current_kanojos[index:]
+			else:
+				current_kanojos = current_kanojos[index:index + limit]
+			current_kanojos = kanojo_manager.fill_owners_info(current_kanojos, owner_users=(self_user, user), self_user=self_user)
+		rspns['search_result'] = {'hit_count': len(current_kanojos)}
+	elif index < len(kanojos_ids):
 		if (index+limit) > len(kanojos_ids):
 			kanojos_ids = kanojos_ids[index:]
 		else:
 			kanojos_ids = kanojos_ids[index:index+limit]
 		self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
-		current_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, host_url=request.host_url, self_user=self_user, clear=CLEAR_NONE)
-		current_kanojos = kanojo_manager.fill_owners_info(current_kanojos, request.host_url, owner_users=(self_user, user), self_user=self_user)
+		current_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, search=search, self_user=self_user, clear=CLEAR_NONE)
+		current_kanojos = kanojo_manager.fill_owners_info(current_kanojos, owner_users=(self_user, user), self_user=self_user)
 	rspns['current_kanojos'] = current_kanojos
 	rspns['user'] = user_manager.clear(user, CLEAR_OTHER, self_uid=session['id'])
 	return json_response(rspns)
@@ -727,25 +762,39 @@ def user_friendkanojos():
 	user_id = int(prms.get('user_id'))
 	index = int(prms.get('index'))
 	limit = int(prms.get('limit'))
-	# TODO: search doesn't work
 	search = prms.get('search')
 	user = user_manager.user(uid=user_id, clear=CLEAR_NONE)
 	if user is None:
-		return json_response({ "code": 200, "user": user })
+		return json_response({ "code": 200, "user": None })
 	rspns = { "code": 200 }
+
 	kanojos_ids = user.get('friends')
 	friend_kanojos = []
-	if index < len(kanojos_ids):
+	if search is not None:
+		self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
+		friend_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, search=search, self_user=self_user, clear=CLEAR_NONE)
+		if index < len(friend_kanojos):
+			friend_kanojos = []
+		else:
+			if (index + limit) > len(friend_kanojos):
+				friend_kanojos = friend_kanojos[index:]
+			else:
+				friend_kanojos = friend_kanojos[index:index + limit]
+			user_ids = kanojo_manager.kanojos_owner_users(friend_kanojos)
+			users = user_manager.users(user_ids, self_user=self_user)
+			friend_kanojos = kanojo_manager.fill_owners_info(friend_kanojos, owner_users=users, self_user=self_user)
+		rspns['search_result'] = {'hit_count':len(friend_kanojos)}
+	elif index < len(kanojos_ids):
 		if (index+limit) > len(kanojos_ids):
 			kanojos_ids = kanojos_ids[index:]
 		else:
 			kanojos_ids = kanojos_ids[index:index+limit]
 		self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
-		friend_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, host_url=request.host_url, self_user=self_user, clear=CLEAR_NONE)
+		friend_kanojos = kanojo_manager.kanojos(kanojo_ids=kanojos_ids, self_user=self_user, clear=CLEAR_NONE)
 
 		user_ids = kanojo_manager.kanojos_owner_users(friend_kanojos)
 		users = user_manager.users(user_ids, self_user=self_user)
-		friend_kanojos = kanojo_manager.fill_owners_info(friend_kanojos, request.host_url, owner_users=users, self_user=self_user)
+		friend_kanojos = kanojo_manager.fill_owners_info(friend_kanojos, owner_users=users, self_user=self_user)
 	rspns['friend_kanojos'] = friend_kanojos
 	rspns['user'] = user_manager.clear(user, CLEAR_OTHER, self_uid=session['id'])
 	return json_response(rspns)
@@ -773,7 +822,7 @@ def kanojo_likerankings():
 
 	user_ids = kanojo_manager.kanojos_owner_users(like_ranking_kanojos)
 	users = user_manager.users(user_ids, self_user=self_user)
-	like_ranking_kanojos = kanojo_manager.fill_owners_info(like_ranking_kanojos, request.host_url, owner_users=users, self_user=self_user)
+	like_ranking_kanojos = kanojo_manager.fill_owners_info(like_ranking_kanojos, owner_users=users, self_user=self_user)
 
 	rspns['like_ranking_kanojos'] = like_ranking_kanojos
 	return jsonify(rspns)
@@ -789,10 +838,10 @@ def kanojo_show():
 	rspns = { "code": 200 }
 	rspns['messages'] = {"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user."}
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
-	kanojo = kanojo_manager.kanojo(kanojo_id, request.host_url, self_user=self_user, clear=CLEAR_NONE)
+	kanojo = kanojo_manager.kanojo(kanojo_id, self_user=self_user, clear=CLEAR_NONE)
 	if kanojo:
 		owner_user = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_NONE)
-		rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, owner_user=owner_user, clear=CLEAR_OTHER, check_clothes=True)
+		rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, owner_user=owner_user, clear=CLEAR_OTHER, check_clothes=True)
 		rspns['owner_user'] = user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)
 
 		rspns['product'] = as_product(kanojo)
@@ -846,7 +895,7 @@ def communication_play_on_live2d():
 
 	rspns = { "code": 200 }
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
-	kanojo = kanojo_manager.kanojo(kanojo_id, request.host_url, self_user=self_user, clear=CLEAR_NONE)
+	kanojo = kanojo_manager.kanojo(kanojo_id, self_user=self_user, clear=CLEAR_NONE)
 
 	if kanojo:
 		owner_user = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_NONE)
@@ -866,7 +915,7 @@ def communication_play_on_live2d():
 
 			rspns.update(dt)
 		rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
-		rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, clear=CLEAR_OTHER)
+		rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER)
 	else:
 		rspns = { "code": 404 }
 		rspns['alerts'] = [{"body": "The Requested KANOJO was not found.", "title": ""}]
@@ -918,12 +967,12 @@ def kanojo_vote_like():
 		return json_response({ "code": 400 })
 	rspns = { "code": 200 }
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
-	kanojo = kanojo_manager.kanojo(kanojo_id, request.host_url, self_user=self_user, clear=CLEAR_NONE)
+	kanojo = kanojo_manager.kanojo(kanojo_id, self_user=self_user, clear=CLEAR_NONE)
 
 	if not user_manager.set_like(self_user, kanojo, like, update_db_record=True):
 		return json_response({"code": 500})
 
-	rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, clear=CLEAR_OTHER)
+	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER)
 	return json_response(rspns)
 
 @app.route('/api/resource/product_category_list.json', methods=['GET','POST'])
@@ -985,14 +1034,14 @@ def activity_usertimeline():
 	kids = activity_manager.kanojo_ids(activities)
 
 	self_user = user_manager.user(uid=self_uid, clear=CLEAR_NONE)
-	kanojos = kanojo_manager.kanojos(kids, request.host_url, self_user, clear=CLEAR_NONE)
+	kanojos = kanojo_manager.kanojos(kids, self_user, clear=CLEAR_NONE)
 
 	user_ids = kanojo_manager.kanojos_owner_users(kanojos)
 	if user_ids:
 		uids.extend(user_ids)
 		uids = list(set(uids))
 	users = user_manager.users(uids, self_user=self_user)
-	kanojos = kanojo_manager.fill_owners_info(kanojos, request.host_url, owner_users=users, self_user=self_user)
+	kanojos = kanojo_manager.fill_owners_info(kanojos, owner_users=users, self_user=self_user)
 
 	activities = activity_manager.fill_activities(activities, users, kanojos, user_manager.default_user, kanojo_manager.default_kanojo)
 
@@ -1008,8 +1057,8 @@ def activity_usertimeline():
 	data = json.dumps(data)
 	data = '''{"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": null, "in_room": true, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "on_advertising": null, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": true, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": null, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": false, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": null, "advertising_product_title": null, "recognition": 11}, "product": null, "user": {"friend_count": 0, "tickets": 5, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}'''
 	from gzip import GzipFile
-	from io import BytesIO as IO
-	gzip_buffer = IO()
+	from io import BytesIO
+	gzip_buffer = BytesIO()
 	with GzipFile(mode='wb',
 					compresslevel=6,
 					fileobj=gzip_buffer) as gzip_file:
@@ -1073,8 +1122,36 @@ def notification_register_token():
 @app.route('/api/message/dialog.json', methods=['GET'])
 def api_message_dialog():
 	if 'id' not in session:
-		return json_response({ "code": 401 })
-	return json_response({ "code": 200 })
+		return jsonify({ "code": 401 })
+	'''
+		a - action param
+			1 - gift to kanojo
+			2 - extended gift
+			3 - date
+			4 - extended date (not use)
+			10,11,12 - main touch action
+			20,21 - main touch by stamina action 
+		pod - part of day param
+			0 - night
+			1 - morning
+			2 - day
+			3 - evening
+	'''
+	# TODO: add more text strings
+	prms = request.args
+	if prms.get('a') is None or prms.get('pod') is None:
+		return jsonify({ "code": 400 })
+	try:
+		a = int(prms.get('a'))
+		pod = int(prms.get('pod'))
+	except ValueError:
+		return jsonify({ "code": 400 })
+	val = reactionword.reactionword_json(a, pod)
+	returning = jsonify({ "code": 200,
+						"kanojo_message": {
+							"text": val,
+							"btn_text": "Test"}})
+	return returning
 
 @app.route('/api/webview/chart.json', methods=['GET'])
 def api_webview_chart():
@@ -1198,7 +1275,7 @@ def barcode_query():
 			"do_add_friend": f"She belongs to {owner_user.get('name')}.\nDo you want to add her on your friend list? It requires 0 stamina."
 		}
 		rspns['barcode'] = as_barcode(kanojo)
-		rspns['kanojo'] = kanojo_manager.clear(kanojo,  request.host_url, self_user, clear=CLEAR_SELF)
+		rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_SELF)
 		rspns['owner_user'] = user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)
 	return json_response(rspns)
 
@@ -1290,7 +1367,7 @@ def barcode_scan_and_generate():
 				f = files['product_image_data']
 				save_product_image(f.stream, barcode)
 
-			rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, clear=CLEAR_OTHER, check_clothes=True)
+			rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER, check_clothes=True)
 			rspns['user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 			db.barcode_tmp.delete_one(bc_info)
 		else:
@@ -1597,7 +1674,7 @@ def communication_do_gift():
 	if 'love_increment' in do_gift and 'info' in do_gift:
 		tmp = do_gift.get('info', {})
 		prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
-		do_gift['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
+		do_gift['love_increment']['reaction_word'] = f'{url}?{urllib.parse.urlencode(prms)}'
 		do_gift.pop('info', None)
 	rspns.update(do_gift)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
@@ -1609,9 +1686,9 @@ def communication_do_gift():
 
 @app.route('/shopping/verify_tickets.json', methods=['GET', 'POST'])
 def shopping_verify_tickets():
-	'''
+	"""
 		buy extend gift/date
-	'''
+	"""
 	if 'id' not in session:
 		return json_response({ "code": 401 })
 	prms = request.form if request.method == 'POST' else request.args
@@ -1626,9 +1703,11 @@ def shopping_verify_tickets():
 	rspns = { 'code': 200 }
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
 	item_type = store.item_type(store_item_id)
-	if item_type==1:
+
+	buy_present = None
+	if item_type==GIFT_ITEM_CLASS:
 		buy_present = user_manager.user_action(self_user, None, do_gift=store_item_id, is_extended_action=True)
-	elif item_type==2:
+	elif item_type==DATE_ITEM_CLASS:
 		buy_present = user_manager.user_action(self_user, None, do_date=store_item_id, is_extended_action=True)
 	else:
 		rspns = { 'code': 400 }
@@ -1662,7 +1741,7 @@ def communication_do_extend_gift():
 		give_present['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
 		give_present.pop('info', None)
 	rspns.update(give_present)
-	rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, clear=CLEAR_OTHER, check_clothes=True)
+	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER, check_clothes=True)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 	if kanojo.get('owner_user_id') != session['id']:
 		rspns['owner_user'] = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_OTHER)
@@ -1687,8 +1766,8 @@ def communication_do_date():
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
 	owner_user = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_NONE)
 
-	rspns = { 'code': 200 }
-	rspns['owner_user'] = user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)
+	rspns = {'code':200,
+			'owner_user':user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)}
 	url = server_url() + 'web/reactionword.html'
 	do_date = user_manager.user_action(user=self_user, kanojo=kanojo, do_date=basic_item_id, is_extended_action=False)
 	if 'love_increment' in do_date and 'info' in do_date:
@@ -1731,7 +1810,7 @@ def communication_do_extend_date():
 		do_date['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
 		do_date.pop('info', None)
 	rspns.update(do_date)
-	rspns['kanojo'] = kanojo_manager.clear(kanojo, request.host_url, self_user, clear=CLEAR_OTHER, check_clothes=True)
+	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER, check_clothes=True)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 	if kanojo.get('owner_user_id') != session['id']:
 		rspns['owner_user'] = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_OTHER)

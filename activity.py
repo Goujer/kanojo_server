@@ -294,7 +294,7 @@ class ActivityManager(object):
 			if 'kanojo' in a:
 				kanojo = next((k for k in kanojos if k.get('id') == a.get('kanojo')), None)
 				a['kanojo'] = kanojo if kanojo else def_kanojo
-				a['product'] = as_product(kanojo)
+				a['product'] = as_product(kanojo) if kanojo else as_product(def_kanojo)
 			if 'user' in a:
 				user = next((u for u in users if u.get('id') == a.get('user')), None)
 				a['user'] = user if user else def_user

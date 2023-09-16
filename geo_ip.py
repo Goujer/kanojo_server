@@ -51,7 +51,7 @@ class GeoIP(object):
             return self.cache.get(key).get('tz')
         if service_type == GEOIP_WEB_SERVICE:
             tz_string = None
-            req = urllib.request.Request('http://freegeoip.net/json/'+ip)
+            req = urllib.request.Request('https://freegeoip.net/json/'+ip)
             try:
                 urlObject = urllib.request.urlopen(req, timeout=5)
                 tmp = json.loads(urlObject.read())

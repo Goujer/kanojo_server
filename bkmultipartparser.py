@@ -6,7 +6,6 @@ from flask_api.parsers import BaseParser
 from io import BytesIO
 from werkzeug.formparser import MultiPartParser as WerkzeugMultiPartParser
 from werkzeug.formparser import default_stream_factory
-from werkzeug._compat import text_type
 
 class BKMultipartParser(BaseParser):
 	"""
@@ -35,5 +34,5 @@ class BKMultipartParser(BaseParser):
 		try:
 			return multipart_parser.parse(BytesIO(data), boundary, len(data))
 		except ValueError as exc:
-			msg = 'Multipart parse error - %s' % text_type(exc)
+			msg = f'Multipart parse error - {str(exc)}'
 			raise exceptions.ParseError(msg)

@@ -76,7 +76,7 @@ class KanojoManager(object):
 		self.dress_up_time1 = [el for el in tmp.get('info') if el.get('dress_up_from')<el.get('dress_up_to')]
 		self.dress_up_time2 = [el for el in tmp.get('info') if el.get('dress_up_from')>el.get('dress_up_to')]
 		if self.db and self.db.seqs.find_one({ 'collection': 'kanojos' }) is None:
-			self.db.seqs.insert({
+			self.db.seqs.insert_one({
 					'collection': 'kanojos',
 					'id': 0
 				})
@@ -156,7 +156,7 @@ class KanojoManager(object):
 			kanojo['owner_user_id'] = 0
 			kanojo['followers'] = []
 		try:
-			self.db.kanojos.insert(kanojo)
+			self.db.kanojos.insert_one(kanojo)
 		except pymongo.errors.DuplicateKeyError:
 			return self.create(barcode_info, params, owner_user)
 		return kanojo
@@ -246,7 +246,7 @@ class KanojoManager(object):
 				else:
 					kanojo.pop('date_info', None)
 
-			return self.db.kanojos.save(kanojo)
+			return self.db.kanojos.update_one(kanojo)
 		return False
 
 	@property
@@ -289,7 +289,7 @@ class KanojoManager(object):
 	def delete(self, kanojo):
 		if kanojo and '_id' in kanojo and self.db:
 			_id = kanojo.pop('_id')
-			self.db.kanojos_deleted.insert(kanojo)
+			self.db.kanojos_deleted.insert_one(kanojo)
 			#print self.db.kanojos.find_one({ 'id': kanojo.get('id') })
 			self.db.kanojos.remove({ '_id': _id })
 
@@ -301,7 +301,7 @@ class KanojoManager(object):
 		'''
 		return RELATION_KANOJO if kanojo.get('id') in user.get('kanojos') else RELATION_FRIEND if kanojo.get('id') in user.get('friends') else RELATION_OTHER
 
-	def fill_fields(self, kanojo, host_url, self_user=None, owner_user=None):
+	def fill_fields(self, kanojo, self_user=None, owner_user=None):
 		kanojo['status'] = 'Born in  %s.\n%d users are following.\n'%(time.strftime('%d %b %Y', time.gmtime(kanojo.get('birthday', 0))), len(kanojo.get('followers', [])))
 		if owner_user:
 			kanojo['status'] += 'She has relationship with %s.'%owner_user.get('name')
@@ -333,9 +333,6 @@ class KanojoManager(object):
 			kanojo['relation_status'] = 1
 			#kanojo['status'] += 'Nobody'
 		kanojo['in_room'] = True
-		if host_url:
-			kanojo['profile_image_url'] = host_url + f'profile_images/kanojo/{kanojo["id"]}/{urllib.parse.quote(kanojo["name"])}.png'
-			kanojo['profile_image_full_url'] = host_url + f'profile_images/kanojo/{kanojo["id"]}/{urllib.parse.quote(kanojo["name"])}.png'
 
 		kanojo['like_rate'] = int(round(kanojo.get('like_rate', 0)))
 		if kanojo.get('like_rate') > 5:
@@ -365,7 +362,7 @@ class KanojoManager(object):
 				return { "body": f"She on the trip, coming back {d_string}.", "title": "Sorry"}
 		return None
 
-	def clear(self, kanojo, host_url, self_user=None, clear=CLEAR_SELF, check_clothes=False, owner_user=None):
+	def clear(self, kanojo, self_user=None, clear=CLEAR_SELF, check_clothes=False, owner_user=None):
 		if kanojo is None:
 			# TODO: maybe should return somthing else?
 			return kanojo
@@ -381,7 +378,7 @@ class KanojoManager(object):
 				self.save(kanojo)
 
 		tmp_kanojo = copy.copy(kanojo)
-		self.fill_fields(tmp_kanojo, host_url, self_user=self_user, owner_user=owner_user)
+		self.fill_fields(tmp_kanojo, self_user=self_user, owner_user=owner_user)
 		if tmp_kanojo.get('relation_status') != RELATION_KANOJO:
 			tmp_kanojo['barcode'] = '************'
 
@@ -400,32 +397,40 @@ class KanojoManager(object):
 		rv['clothes_type'] = clothes_type
 		return OrderedDict(sorted(list(rv.items()), key=cmp_to_key(kanojo_order_dict_cmp)))
 
-	def kanojo(self, kanojo_id, host_url, self_user=None, clear=CLEAR_SELF, check_clothes=False):
+	def kanojo(self, kanojo_id, self_user=None, clear=CLEAR_SELF, check_clothes=False):
 		query = { 'id': kanojo_id }
 		k = self.db.kanojos.find_one(query)
 		if k:
-			return self.clear(k, host_url, self_user=self_user, clear=clear, check_clothes=check_clothes)
+			return self.clear(k, self_user=self_user, clear=clear, check_clothes=check_clothes)
 		return k
 
-	def kanojos(self, kanojo_ids, host_url, self_user=None, clear=CLEAR_SELF):
+	def kanojos(self, kanojo_ids, search=None, self_user=None, clear=CLEAR_SELF):
 		query = {
-			'id': {
-				'$in': kanojo_ids
+			'id':{
+				'$in':kanojo_ids
 			}
 		}
+		if search is not None:
+			query.update({
+				'$or': [{'name': {'$regex': "search"}},
+						{'product_name': {'$regex': "search"}},
+						{'company_name': {'$regex': "search"}},
+						{'product_comment': {'$regex': "search"}}]
+			})
+
 		arr = []
 		for k in self.db.kanojos.find(query):
-			arr.append(self.clear(k, host_url, self_user=self_user, clear=clear))
+			arr.append(self.clear(k, self_user=self_user, clear=clear))
 
 		# sort result
 		rv = sorted(arr, key=lambda k: kanojo_ids.index(k['id']))
 		return rv
 
-	def fill_owners_info(self, kanojos, host_url, owner_users, self_user=None):
+	def fill_owners_info(self, kanojos, owner_users, self_user=None):
 		rv = []
 		for k in kanojos:
 			owner_user = next((u for u in owner_users if u.get('id') == k.get('owner_user_id')), None)
-			rv.append(self.clear(k, host_url, self_user=self_user, owner_user=owner_user, clear=CLEAR_SELF))
+			rv.append(self.clear(k, self_user=self_user, owner_user=owner_user, clear=CLEAR_SELF))
 		return rv
 
 	def kanojos_owner_users(self, kanojos):
@@ -719,9 +724,9 @@ class KanojoManager(object):
 			if not is_extended:
 				self.apply_date(kanojo, store_item)
 			return rv
-		elif relation_status == 2:
+		elif relation_status == RELATION_KANOJO:
 			action_weight = int(action_weight/5)
-		elif relation_status == 3:
+		elif relation_status == RELATION_FRIEND:
 			action_weight = int(action_weight/20)
 		else:
 			action_weight = 0

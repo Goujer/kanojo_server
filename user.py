@@ -38,16 +38,15 @@ def user_order_dict_cmp(x, y):
 
 class UserManager(object):
 	"""docstring for UserManager"""
-	def __init__(self, db=None, server=None, kanojo_manager=None, store=None, activity_manager=None):
+	def __init__(self, db=None, kanojo_manager=None, store=None, activity_manager=None):
 		super(UserManager, self).__init__()
 		self.db = db
-		self.server = server
 		self.kanojo_manager = kanojo_manager
 		self.store = store
 		self.activity_manager = activity_manager
 		self.last_uid = 1
 		if self.db and self.db.seqs.find_one({ 'collection': 'users' }) is None:
-			self.db.seqs.insert({
+			self.db.seqs.insert_one({
 					'collection': 'users',
 					'id': 0
 				})
@@ -103,7 +102,7 @@ class UserManager(object):
 			}
 		if self.db:
 			try:
-				self.db.users.insert(user)
+				self.db.users.insert_one(user)
 				self.last_uid = uid
 			except pymongo.errors.DuplicateKeyError:
 				return self.create(name, password, email, birthday, sex, profile_image_data)
@@ -119,7 +118,7 @@ class UserManager(object):
 
 	def save(self, user):
 		if user and '_id' in user and self.db:
-			return self.db.users.save(user)
+			return self.db.users.update_one(user)
 		return False
 
 	@property

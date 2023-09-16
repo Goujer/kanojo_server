@@ -625,7 +625,7 @@ def acc_verify():
 	password = prms.get('password')
 	api = prms.get('api')
 	language = prms.get('language')
-	ip_hash = hashlib.md5(get_remote_ip(), usedforsecurity=False).hexdigest()
+	ip_hash = hashlib.md5(get_remote_ip().encode('utf-8'), usedforsecurity=False).hexdigest()
 	if api and language:
 		client_data = db.analytics.find_one({'client': ip_hash})
 		if client_data:

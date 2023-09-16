@@ -31,6 +31,36 @@
 			"like_weight": 1
 		},
 		{
+			"id": 1,
+			"dress_up_from": 0,
+			"dress_up_to": 23,
+			"like_weight": 1
+		},
+		{
+			"id": 2,
+			"dress_up_from": 0,
+			"dress_up_to": 23,
+			"like_weight": 1
+		},
+		{
+			"id": 3,
+			"dress_up_from": 0,
+			"dress_up_to": 23,
+			"like_weight": 1
+		},
+		{
+			"id": 4,
+			"dress_up_from": 0,
+			"dress_up_to": 23,
+			"like_weight": 1
+		},
+		{
+			"id": 5,
+			"dress_up_from": 0,
+			"dress_up_to": 23,
+			"like_weight": 1
+		},
+		{
 			"id": 6,
 			"dress_up_from": 19,
 			"dress_up_to": 2,

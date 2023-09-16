@@ -14,6 +14,10 @@ from kanojo import as_product
 
 from constants import *
 
+from kanojo import as_product
+
+from constants import *
+
 CLEAR_NONE = 0
 CLEAR_SELF = 1
 
@@ -41,7 +45,7 @@ class ActivityManager(object):
 					'product': null,
 					'user': null,
 					'other_user': null,
-					'activity': 'human readeble string',
+					'activity': 'human readable string',
 					'created_timestamp': 0,
 					'id': 0,
 					'activity_type': 0

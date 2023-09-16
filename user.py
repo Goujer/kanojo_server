@@ -347,7 +347,7 @@ class UserManager(object):
 
 	# x = lambda y: int(math.floor((2*math.sqrt(3)*math.sqrt(5*y+3888)-216)/5+1))
 	# y = FLOOR(A3*(7.2+A3/12))
-	# x - level, y - scan count 
+	# x - level, y - scan count
 	def increment_scan_couner(self, user, inc_value=1, update_db_record=False):
 		user['scan_count'] = user.get('scan_count', 0) + inc_value
 		lvl = int(math.floor((2*math.sqrt(3)*math.sqrt(5*user['scan_count']+3888)-216)/5+1))
@@ -408,7 +408,7 @@ class UserManager(object):
 			_itm = _itm[0]
 			_itm['units'] = _itm.get('units', 1) + units
 		else:
-			_itm = { 
+			_itm = {
 				'store_item_id': store_item.get('base_store_item_id', store_item.get('item_id'))
 			}
 			if units != 1:

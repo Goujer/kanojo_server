@@ -1,0 +1,55 @@
+{
+	"item_categories": [
+		{
+			"title": "B coin",
+			"items": [
+				{
+					"description": "Movie theater as a standard date spot. This item may decrease KANOJO's love level towards her boyfriend.",
+					"title": "Movie",
+					"image_url": "https://www.barcodekanojo.com/images/store/date_movie.png",
+					"item_id": 20,
+					"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/date_movie_thm.png",
+					"price_b": 5,
+					"price_s": 5
+				},
+				{
+					"description": "All dates from tickets starts from 500 id"
+				}
+			]
+		}
+		{
+			"title": "Tickets",
+			"items": [
+				{
+					"description": "Wonderful date against the background of Mt. Fuji!{date1}",
+					"title": "Mt.Fuji",
+					"confirm_use_message": null,
+					"image_url": "https://www.barcodekanojo.com/images/store/date_fuji.png",
+					"item_id": 500,
+					"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/date_fuji.png",
+					"price_t": 1,
+					"group": "ITEM_SECTION_DATE",
+					"duration_of_date": 43200,
+					"background_image_url": "https://www.barcodekanojo.com/images/profile_bkgr/date_mt_fuji_daytime.jpg",
+					"background_image_url_night": "https://www.barcodekanojo.com/images/profile_bkgr/date_mt_fuji_evening.jpg",
+					"hidden_in_store": true
+				},
+				{
+					"description": "Impressive Dating at amusement park!{date12h}",
+					"title": "Amusement park",
+					"confirm_use_message": null,
+					"image_url": "https://www.barcodekanojo.com/images/store/date_park.png",
+					"item_id": 506,
+					"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/date_park_thm.png",
+					"price_t": 1,
+					"group": "ITEM_SECTION_DATE",
+					"category_id": 22,
+					"duration_of_date": 43200,
+					"background_image_url": "https://www.barcodekanojo.com/images/profile_bkgr/date_amusementp_daytime.jpg",
+					"background_image_url_night": "https://www.barcodekanojo.com/images/profile_bkgr/date_amusementp_evening.jpg",
+					"hidden_in_store": true
+				}
+			]
+		}
+	]
+}

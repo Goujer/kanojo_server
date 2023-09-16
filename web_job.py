@@ -932,7 +932,7 @@ def apibanner_kanojoroom_reactionword():
 			3 - date
 			4 - extended date (not use)
 			10,11,12 - main touch action
-			20,21 - main touch by stamina action 
+			20,21 - main touch by stamina action
 		pod - part of day param
 			0 - night
 			1 - morning
@@ -1130,7 +1130,7 @@ def api_message_dialog():
 			3 - date
 			4 - extended date (not use)
 			10,11,12 - main touch action
-			20,21 - main touch by stamina action 
+			20,21 - main touch by stamina action
 		pod - part of day param
 			0 - night
 			1 - morning

@@ -51,7 +51,7 @@ def as_barcode(kanojo):
 
 def as_product(kanojo):
 	product = {"barcode": kanojo.get('barcode', ''),
-			   "name": kanojo.get('product_name', ''),
+				"name": kanojo.get('product_name', ''),
 				"category_id": kanojo.get('product_category_id', 21),
 				"category": getCategoryText(kanojo.get('product_category_id', 21)),
 				"comment": kanojo.get('product_comment', ''),
@@ -165,7 +165,7 @@ class KanojoManager(object):
 		'''
 			Generate kanojo params from barcode
 			Return:
-				barcode_info 
+				barcode_info
 		'''
 		if not barcode or len(barcode)==0:
 			return None

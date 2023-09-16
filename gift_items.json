@@ -1,0 +1,200 @@
+{
+	"item_categories": [
+		{
+			"title": "B coin",
+			"items": [
+				{
+					"item_id": 1,
+					"title": "A bunch of flowers",
+					"description": "Any KANOJOs love flowers. This item may increase KANOJO's love level.",
+					"image_thumbnail_url": "/images/store/gift_flower_thm.png",
+					"image_url": "/images/store/gift_flower.png",
+					"price": "Price: 25B Coins",
+					"price_b": 25,
+					"purchasable_level": 1
+				},
+				{
+					"item_id": 2,
+					"title": "Perfume",
+					"description": "A bit fancy gift. This item may increase KANOJO's love level.",
+					"image_thumbnail_url": "/images/store/gift_perfume_thm.png",
+					"image_url": "/images/store/gift_perfume.png",
+					"price": "Price: 40B Coins",
+					"price_b": 40,
+					"purchasable_level": 1
+				},
+				{
+					"item_id": 3,
+					"title": "Wallet",
+					"description": "",
+					"image_thumbnail_url": "/images/store/gift_wallet_thm.png",
+					"image_url": "/images/store/gift_wallet.png",
+					"price": "Price: 50B Coins",
+					"price_b": 50,
+					"purchasable_level": 1
+				},
+				{
+					"item_id": 4,
+					"title": "Name-brand bag",
+					"description": "",
+					"image_thumbnail_url": "/images/store/gift_bag_thm.png",
+					"image_url": "/images/store/gift_bag.png",
+					"price": "Price: 100B Coins",
+					"price_b": 100,
+					"purchasable_level": 1
+				}
+			]
+		},
+		{
+			"title": "Wardrobe",
+			"items": [
+				{
+					"item_category_id": 6,
+					"expand_flag": 0,
+					"title": "Clothes",
+					"description": "Buy clothes for your Kanojo or friends as a present!",
+					"image_thumbnail_url": "/images/store/wardrobe_thm.png",
+					"item_categories": [
+						{
+							"title": "Casual Wear",
+							"items": [
+								{
+									"item_id": 1050,
+									"clothes_item_id": 50,
+									"title": "V-shaped knit",
+									"description": "Dressing time: ? - ?\nMissing Description.{attention}",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_1050_thm.png",
+									"image_url": "/images/store/wardrobe_clothes_1050.png",
+									"price": "Ticket: 2",
+									"price_t": 2,
+									"_comment": "No dress up time defined",
+									"purchase_product_id": "wardrobe_clothes_1050",
+									"purchasable_level": 1
+								},
+								{
+									"item_id": 1022,
+									"clothes_item_id": 22,
+									"title": "Red knit dress",
+									"description": "Dressing time: 14:00 - 20:00\nMissing Description.{attention}",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_1022_thm.png",
+									"image_url": "/images/store/wardrobe_clothes_1022.png",
+									"price": "Ticket: 2",
+									"price_t": 2,
+									"purchase_product_id": "wardrobe_clothes_1022",
+									"purchasable_level": 1
+								}
+							]
+						},
+						{
+							"title": "Business Wear",
+							"items": [
+								{
+									"item_id": 101,
+									"clothes_item_id": 8,
+									"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0001",
+									"confirm_purchase_message": null,
+									"description": "Dressing time: Daytime\nChic and elegant black jacket.{attention}",
+									"title": "Jacket (black)",
+									"image_url": "/images/store/wardrobe_clothes_0001.png",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_0001_thm.png",
+									"price_t": 1,
+									"purchasable_level": 1
+								}
+							]
+						},
+						{
+							"title": "Sports Wear"
+						},
+						{
+							"title": "Uniform"
+						},
+						{
+							"title": "Special",
+							"items": [
+								{
+									"item_id": 140,
+									"clothes_item_id": 66,
+									"purchase_product_id": "wardrobe_clothes_0009",
+									"confirm_purchase_message": null,
+									"description": "Dressing time: Daytime\nおかえり！ごはんすぐ出来るから待っててね。エプロン姿であなたを待っててくれます。{attention}",
+									"title": "エプロン",
+									"price_t": 3,
+									"image_url": "/images/store/wardrobe_clothes_0009.png",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_0009_thm.png",
+									"purchasable_level": 1
+								}
+							]
+						},
+						{
+							"title": "Unknown Category",
+							"items": [
+								{
+									"item_id": 1011,
+									"clothes_item_id": 11,
+									"description": "Dressing time: 10:00 - 16:00\nMissing Description.{attention}",
+									"title": "Unknown",
+									"image_url": "/images/store/wardrobe_clothes_1011.png",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_1011_thm.png",
+									"price": "B-Coin: 300 | Unknown",
+									"price_b": 300,
+									"purchase_product_id": "wardrobe_clothes_1011",
+									"purchasable_level": 1
+								},
+								{
+									"item_id": 1051,
+									"clothes_item_id": 51,
+									"description": "Dressing time: 16:00 - 0:00\nMissing Description.{attention}",
+									"title": "Unknown",
+									"image_url": "/images/store/wardrobe_clothes_1051.png",
+									"image_thumbnail_url": "/images/store/wardrobe_clothes_1051_thm.png",
+									"price": "B-Coin: 300 | Unknown",
+									"price_b": 300,
+									"purchase_product_id": "wardrobe_clothes_1051",
+									"purchasable_level": 1
+								}
+							]
+						}
+					]
+				},
+				{
+					"item_category_id": 24,
+					"expand_flag": 0,
+					"title": "EyeWear",
+					"description": "Be more fashionable with glasses! Give it to her now!",
+					"image_thumbnail_url": "/images/store/category_glasses.png"
+				},
+				{
+					"item_category_id": 46,
+					"expand_flag": 0,
+					"title": "B COIN",
+					"description": "B coin",
+					"image_thumbnail_url": "/images/store/item_bcoin_thm.png"
+				},
+				{
+					"item_category_id": 44,
+					"expand_flag": 1,
+					"title": "Wedding Ware",
+					"description": "Wedding Ware For Permanent Kanojo",
+					"image_thumbnail_url": "/images/store/item_permanant_kanojo_thm.png"
+				}
+			]
+		},
+		{
+			"title": "Goodbye Letters",
+			"items": [
+				{
+					"item_id": 198,
+					"purchase_product_id": "jp.co.cybird.barcodekanojo.letter_goodbye_0001_0003",
+					"confirm_purchase_message": null,
+					"description": "To dump your Kanojo...",
+					"title": "Goodbye Letter",
+					"purchasable_level": 1,
+					"price_s": 5,
+					"image_url": "https://www.barcodekanojo.com/images/store/letter_goodbye.png",
+					"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/letter_goodbye_thm.png",
+					"action": "dump_kanojo"
+				}
+			]
+		}
+	]
+}

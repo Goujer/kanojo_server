@@ -118,7 +118,7 @@ class UserManager(object):
 
 	def save(self, user):
 		if user and '_id' in user and self.db:
-			return self.db.users.replace_one({'_id', user['_id']}, user)
+			return self.db.users.replace_one({'id', user['id']}, user, True)
 		return False
 
 	@property

@@ -246,7 +246,7 @@ class KanojoManager(object):
 				else:
 					kanojo.pop('date_info', None)
 
-			return self.db.kanojos.self.db.users.replace_one({'id': kanojo['id']}, kanojo, True)
+			return self.db.kanojos.replace_one({'id': kanojo['id']}, kanojo, True)
 		return False
 
 	@property
@@ -763,14 +763,14 @@ if __name__ == "__main__":
 
 	from user import UserManager
 	um = UserManager(db)
-	user = um.user(uid=1, clear=CLEAR_NONE)
+	test_user = um.user(uid=1, clear=CLEAR_NONE)
 
 	import config
 	km = KanojoManager(db, generate_secret1=config.KANOJO_SECRET1, generate_secret2=config.KANOJO_SECRET2)
 	#kanojo = km.kanojo(368, user, clear=CLEAR_NONE)
-	kanojo = km.kanojo(31, user, clear=CLEAR_NONE)
-	kanojo.pop('_id', None)
-	print(json.dumps(kanojo))
+	test_kanojo = km.kanojo(31, test_user, clear=CLEAR_NONE)
+	test_kanojo.pop('_id', None)
+	print(json.dumps(test_kanojo))
 
 	#import pprint
 	#pprint.pprint(km.user_action(kanojo, user, '10|11|12|20|21|20|12|11|10'))
@@ -779,10 +779,10 @@ if __name__ == "__main__":
 
 	for i in range(1417822084, 1417822084+60*60*24*15, 60*60):
 		tm = datetime.fromtimestamp(i, pytz.timezone('Europe/Kiev'))
-		(clothes_type, changed) = km.select_clothes(kanojo, test_time=i)
+		(clothes_type, changed) = km.select_clothes(test_kanojo, test_time=i)
 		print('%02d %d %d'%(tm.hour, clothes_type, changed))
 
-	kanojo.pop('_id', None)
-	print(json.dumps(kanojo))
+	test_kanojo.pop('_id', None)
+	print(json.dumps(test_kanojo))
 	#print km.create(barcode_info, barcode_info.get('name'), '/profile_images/kanojo/1.png?w=88&h=88&face=true', { 'id': 1 })
 

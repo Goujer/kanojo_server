@@ -483,7 +483,7 @@ def generate_barcode():
 		break
 	barcode['barcode'] = bc
 	barcode['timestamp'] = int(time.time())
-	db.barcode_tmp.self.db.users.replace_one({'barcode': barcode['barcode']}, barcode, True)
+	db.barcode_tmp.replace_one({'barcode': barcode['barcode']}, barcode, True)
 
 	rv = { 'code': 200 }
 	rv['barcode'] = bc
@@ -1204,7 +1204,7 @@ def barcode_query():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
 	prms = request.form if request.method == 'POST' else request.args
-	if prms.get('barcode') is None:
+	if prms.get('barcode') or len(prms.get('barcode')) != 12 or len(prms.get('barcode')) != 13 is None: #If length of code is not 12 or 13 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
 		return json_response({ "code": 400 })
 	barcode = prms.get('barcode')
 	session['barcode'] = barcode
@@ -1291,7 +1291,7 @@ def barcode_scan():
 			"code": 404,
 			"exception": "",
 			"alerts": [
-				{"body": "Kanojo don't found.", "title": ""}
+				{"body": "Kanojo not found.", "title": ""}
 			]
 		}
 	else:

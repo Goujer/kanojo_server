@@ -875,14 +875,16 @@ def communication_play_on_live2d():
 	'''
 	if 'id' not in session:
 		return json_response({ "code": 401 })
+
 	prms = request.form if request.method == 'POST' else request.args
 	if prms.get('kanojo_id') is None or prms.get('actions') is None:
 		return json_response({ "code": 400 })
+
 	try:
 		kanojo_id = int(prms.get('kanojo_id'))
+		actions = prms.get('actions')
 	except ValueError:
 		return json_response({ "code": 400 })
-	actions = prms.get('actions')
 
 	rspns = { "code": 200 }
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
@@ -960,8 +962,7 @@ def kanojo_vote_like():
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
 	kanojo = kanojo_manager.kanojo(kanojo_id, self_user=self_user, clear=CLEAR_NONE)
 
-	if not user_manager.set_like(self_user, kanojo, like, update_db_record=True):
-		return json_response({"code": 500})
+	user_manager.set_like(self_user, kanojo, like, update_db_record=True)   #Update DB with like status
 
 	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER)
 	return json_response(rspns)

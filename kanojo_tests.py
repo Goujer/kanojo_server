@@ -144,7 +144,7 @@ class KanojoTest(unittest.TestCase):
         self.assertSequenceEqual(kanojo, self.kanojo)
 
     def test_action_string_to_freq(self):
-        dt = self.km.action_string_to_freq('10|12|21|11|21|11|12|21')
+        dt = action_string_to_freq('10|12|21|11|21|11|12|21')
         self.assertSequenceEqual(dt, { 10: 1, 11: 2, 12: 2, 21: 3 })
 
     def test_bits2int(self):

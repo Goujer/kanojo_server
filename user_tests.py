@@ -100,7 +100,7 @@ class UserTest(unittest.TestCase):
         dt = self.um.user_action(user, kanojo)
         self.assertEqual(dt.get('code'), 500)
 
-        dt = self.um.user_action(user, kanojo, action_string="10|12|21")
+        dt = self.um.user_action(user, kanojo, actions="10|12|21")
         self.assertEqual(dt.get('code'), 200)
         self.assertTrue('love_increment' in dt)
         self.assertTrue('increase_love' in dt.get('love_increment'))
@@ -109,7 +109,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(self.user.get('stamina')-10, user.get('stamina'))
         #print dt
 
-        dt = self.um.user_action(user, kanojo2, action_string="10|12|21|21|20|12|12|20")
+        dt = self.um.user_action(user, kanojo2, actions="10|12|21|21|20|12|12|20")
         self.assertEqual(dt.get('code'), 200)
         self.assertTrue('love_increment' in dt)
         self.assertTrue('decrement_love' in dt.get('love_increment'))
@@ -119,14 +119,14 @@ class UserTest(unittest.TestCase):
 
         kanojo2 = copy.deepcopy(self.kanojo_friend)
         kanojo2['love_gauge'] = 1
-        dt = self.um.user_action(user, kanojo2, action_string="10|12|21|21|20|12|12|20")
+        dt = self.um.user_action(user, kanojo2, actions="10|12|21|21|20|12|12|20")
         self.assertEqual(dt.get('code'), 200)
         self.assertTrue('love_increment' in dt)
         self.assertEqual(self.user.get('stamina')-30, user.get('stamina'))
         self.assertTrue(dt.get('info').get('change_owner'))
 
         user['stamina'] = 5
-        dt = self.um.user_action(user, kanojo, action_string="10|12|21")
+        dt = self.um.user_action(user, kanojo, actions="10|12|21")
         self.assertEqual(dt.get('code'), 403)
 
     def test_user_action_item(self):

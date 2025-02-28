@@ -19,11 +19,8 @@ from functools import cmp_to_key
 from pymongo import MongoClient
 from random import randint
 
-CLEAR_NONE = 0
-CLEAR_SELF = 1
-
 def kanojo_order_dict_cmp(x, y):
-	order = ('status', 'avatar_background_image_url', 'in_room', 'mascot_enabled', 'mouth_type', 'skin_color', 'body_type', 'race_type', 'spot_type', 'birth_day', 'sexual', 'id', 'recognition', 'on_advertising', 'clothes_type', 'brow_type', 'consumption', 'like_rate', 'eye_position', 'source', 'location', 'birth_month', 'follower_count', 'goods_button_visible', 'accessory_type', 'birth_year', 'possession', 'hair_type', 'clothes_color', 'relation_status', 'ear_type', 'brow_position', 'barcode', 'love_gauge', 'voted_like', 'eye_color', 'glasses_type', 'hair_color', 'face_type', 'nationality', 'advertising_product_url', 'geo', 'emotion_status', 'eye_type', 'mouth_position', 'name', 'fringe_type', 'nose_type', 'advertising_banner_url', 'advertising_product_title', )
+	order = ('status', 'avatar_background_image_url', 'in_room', 'mascot_enabled', 'mouth_type', 'skin_color', 'body_type', 'race_type', 'spot_type', 'birth_day', 'sexual', 'id', 'recognition', 'clothes_type', 'brow_type', 'consumption', 'like_rate', 'eye_position', 'source', 'location', 'birth_month', 'follower_count', 'goods_button_visible', 'accessory_type', 'birth_year', 'possession', 'hair_type', 'clothes_color', 'relation_status', 'ear_type', 'brow_position', 'barcode', 'love_gauge', 'voted_like', 'eye_color', 'glasses_type', 'hair_color', 'face_type', 'nationality', 'advertising_product_url', 'geo', 'emotion_status', 'eye_type', 'mouth_position', 'name', 'fringe_type', 'nose_type', 'advertising_banner_url', 'advertising_product_title', )
 	x,y = x[0], y[0]
 	if x in order and y in order:
 		return order.index(x)-order.index(y)
@@ -64,6 +61,30 @@ def as_product(kanojo):
 				#"product": kanojo.get('product_name', '')
 			}
 	return product
+
+def actions_to_freq(actions: list[int]):
+	freq = {}
+	for act in actions:
+		if act not in freq:
+			freq[act] = len([el for el in actions if el==act])
+	return freq
+
+# Takes duration of seconds and makes in a pretty string
+def duration_to_str(duration: int):
+	if duration < 60:
+		return '%d seconds'%duration if duration > 1 else '%d second'%duration
+	duration = int(duration/60)
+	if duration < 60:
+		return '%d minutes'%duration if duration > 1 else '%d minute'%duration
+	duration = int(duration/60)
+	if duration < 24:
+		return '%d hours'%duration if duration > 1 else '%d hour'%duration
+	duration = int(duration/24)
+	if duration < 7:
+		return '%d days'%duration if duration > 1 else '%d day'%duration
+	duration = int(duration/7)
+	return '%d weeks'%duration if duration > 1 else '%d week'%duration
+
 
 class KanojoManager(object):
 	"""docstring for KanojoManager"""
@@ -124,7 +145,6 @@ class KanojoManager(object):
 				#"birth_day": 30,
 				#"birth_month": 11,
 				#"birth_year": 2013,
-				#"on_advertising": None,
 				#"source": "\u82a5\u5ddd\u9f8d\u4e4b\u4ecb\u5168\u96c6\u30085\u3009 (\u3061\u304f\u307e\u6587\u5eab)",
 				#"follower_count": 0,
 				#"goods_button_visible": True,
@@ -175,7 +195,7 @@ class KanojoManager(object):
 		hash_arr = bytearray(hashlib.md5(bc).digest())
 
 		rv = { 'barcode': barcode, 'body_type': 1 }
-		order =    [
+		order = [
 				'hair_color', 'eye_color', 'skin_color', 'clothes_color',
 				'mouth_type', 'race_type', 'spot_type', 'clothes_type', 'brow_type', 'accessory_type', 'hair_type', 'ear_type', 'glasses_type', 'face_type', 'eye_type', 'fringe_type', 'nose_type',
 				'eye_position', 'brow_position', 'mouth_position',
@@ -224,34 +244,33 @@ class KanojoManager(object):
 			del order[0]
 		return rv
 
+	#Converts section of byte array into an integer
 	def bits2int(self, byte_arr, bit_start, bit_end):
-		last_bits_move = 8-(bit_end % 8)
 		first_bits_move = (bit_start % 8)
+		last_bits_move = 8-(bit_end % 8)
 
-		rv = byte_arr[int(bit_start/8)] & ~(-1 << (8 - first_bits_move))
-		for i in range(int(bit_start/8), int(bit_end/8)):
+		starting_byte_index = int(bit_start/8)
+		ending_byte_index = int(bit_end/8)
+		rv = byte_arr[starting_byte_index] & ~(-1 << (8 - first_bits_move))
+		for i in range(starting_byte_index, ending_byte_index):
 			rv = rv << 8 | byte_arr[i+1]
 		rv = rv >> last_bits_move
 		return rv
 
-	def save(self, kanojo):
+	def save(self, kanojo: dict):
 		if kanojo and '_id' in kanojo and self.db:
-			# check date_info
-			date_info = kanojo.get('date_info')
-			if date_info and len(date_info) > 0:
-				tm = int(time.time())
-				date_info = [x for x in date_info if x.get('back_time', 0) > tm]
-				if len(date_info):
-					kanojo['date_info'] = date_info
-				else:
-					kanojo.pop('date_info', None)
 
+			# check date_info, remove if no longer valid
+			date_info = kanojo.get('date_info')
+			if date_info:
+				if date_info.get('back_time', 0) <= time.time():
+					kanojo.pop('date_info', None)
 			return self.db.kanojos.replace_one({'id': kanojo['id']}, kanojo, True)
 		return False
 
 	@property
 	def default_kanojo(self):
-		rv = {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "nose_type": 1, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 0, "recognition": 11, "on_advertising": None, "clothes_type": 701, "brow_type": 10, "consumption": 17, "like_rate": 1, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "possession": 11, "hair_type": 3, "clothes_color": 3, "relation_status": RELATION_KANOJO, "ear_type": 1, "brow_position": 0, "barcode": "************", "love_gauge": 50, "voted_like": False, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "eye_type": 101, "mouth_position": 0, "name": 'Unknown', "fringe_type": 22, "skin_color": 2, "advertising_banner_url": None, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Online. 0 users are following.\nShe has no relationship.", "advertising_product_title": None, "profile_image_url": "http://bk-dump.herokuapp.com/images/common/no_kanojo_picture.png", 'profile_image_full_url': "http://bk-dump.herokuapp.com/images/common/no_kanojo_picture_f.png"}
+		rv = {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "nose_type": 1, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 0, "recognition": 11, "clothes_type": 701, "brow_type": 10, "consumption": 17, "like_rate": 1, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "possession": 11, "hair_type": 3, "clothes_color": 3, "relation_status": RELATION_KANOJO, "ear_type": 1, "brow_position": 0, "barcode": "************", "love_gauge": 50, "voted_like": False, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "eye_type": 101, "mouth_position": 0, "name": 'Unknown', "fringe_type": 22, "skin_color": 2, "advertising_banner_url": None, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Online. 0 users are following.\nShe has no relationship.", "advertising_product_title": None, "profile_image_url": "/images/common/no_kanojo_picture.png", 'profile_image_full_url': "/images/common/no_kanojo_picture_f.png"}
 		return rv
 
 	def increment_scan_counter(self, kanojo, update_db_record=True):
@@ -293,7 +312,7 @@ class KanojoManager(object):
 			#print self.db.kanojos.find_one({ 'id': kanojo.get('id') })
 			self.db.kanojos.remove({ '_id': _id })
 
-	def relation_status(self, kanojo, user):
+	def relation_status(self, kanojo: dict, user: dict) -> bool:
 		'''
 			1 - RELATION_OTHER
 			2 - RELATION_KANOJO
@@ -302,28 +321,44 @@ class KanojoManager(object):
 		return RELATION_KANOJO if kanojo.get('id') in user.get('kanojos') else RELATION_FRIEND if kanojo.get('id') in user.get('friends') else RELATION_OTHER
 
 	def fill_fields(self, kanojo, self_user=None, owner_user=None):
-		kanojo['status'] = 'Born in  %s.\n%d users are following.\n'%(time.strftime('%d %b %Y', time.gmtime(kanojo.get('birthday', 0))), len(kanojo.get('followers', [])))
+		kanojo['status'] = f'Born in  {time.strftime("%d %b %Y", time.gmtime(kanojo.get("birthday", 0)))}.\n{len(kanojo.get("followers", [])):d} users are following.\n'
 		if owner_user:
-			kanojo['status'] += 'She has relationship with %s.'%owner_user.get('name')
+			kanojo['status'] += f'She has relationship with {owner_user.get("name")}.'
 		elif self_user and self_user.get('id') == kanojo.get('owner_user_id'):
-			kanojo['status'] += 'She has relationship with %s.'%self_user.get('name')
+			kanojo['status'] += f'She has relationship with {self_user.get("name")}.'
 		else:
-			kanojo['status'] += 'She has not in relationship.'
+			kanojo['status'] += 'She is not in a relationship.'
 
 		dt = time.gmtime(kanojo.get('birthday', 0))
 		kanojo['birth_day'] = dt.tm_mday
 		kanojo['birth_month'] = dt.tm_mon
 		kanojo['birth_year'] = dt.tm_year
+
 		kanojo['emotion_status'] = kanojo.get('love_gauge')
-		kanojo['on_advertising'] = False
 		kanojo['source'] = ''
 		kanojo['follower_count'] = len(kanojo.get('followers'))
-		kanojo['geo'] = '0.0000,0.0000'
-		kanojo['advertising_banner_url'] = None  # TODO: shows when open kanojo ("reactionword" api call format)
 		kanojo['advertising_product_title'] = None
 		#kanojo['status'] = 'Born in  %s @ %s. Area: %s. %d users are following.\nShe has relationship with '%(time.strftime('%d %b %Y', time.gmtime(kanojo.get('birthday'))), kanojo.get('location'), kanojo.get('nationality'), kanojo.get('follower_count'))
+
+		date_info = self.kanojo_date(kanojo)
+		if date_info:
+			date_user = self.db.users.find_one({"id":date_info.get('user_id')})
+
+			date_location = date_info.get('date_location')
+			if date_location:
+				kanojo['date_location'] = date_location
+
+			#Add to status if she is on a date
+			kanojo['status'] += f'\nShe is currently on a date with {date_user.get("name", "")} for {duration_to_str(date_info.get("back_time", 0)-time.time())}.'
+			if self_user and date_user.get('id') == self_user.get('id'):
+				kanojo['in_room'] = True
+			else:
+				kanojo['in_room'] = False
+		else:
+			kanojo['in_room'] = True
+
 		if self_user is not None:
-			kanojo['goods_button_visible'] = self_user.get('id')==kanojo.get('owner_user_id')
+			#kanojo['goods_button_visible'] = self_user.get('id')==kanojo.get('owner_user_id')
 			kanojo['voted_like'] = kanojo.get('id') in self_user.get('likes', [])
 			kanojo['relation_status'] = self.relation_status(kanojo, self_user)
 			#kanojo['status'] += owner_user.get('name') if owner_user else self_user.get('name') if kanojo.get('relation_status') == 2 else 'Nobody'
@@ -332,42 +367,42 @@ class KanojoManager(object):
 			kanojo['voted_like'] = False
 			kanojo['relation_status'] = 1
 			#kanojo['status'] += 'Nobody'
-		kanojo['in_room'] = True
 
-		kanojo['like_rate'] = int(round(kanojo.get('like_rate', 0)))
+		kanojo['like_rate'] = round(kanojo.get('like_rate', 0))
 		if kanojo.get('like_rate') > 5:
 			kanojo['like_rate'] = 5
 		return kanojo
 
-	def kanojo_date(self, kanojo):
+	# Get Kanojo's date_info if it is valid
+	def kanojo_date(self, kanojo: dict) -> dict | None:
 		date_info = kanojo.get('date_info')
-		if date_info and len(date_info) > 0:
-			tm = int(time.time())
-			for d in date_info:
-				if d.get('back_time') > tm:
-					return d
+		if date_info and date_info.get('back_time') > time.time():
+			return date_info
+		else:
+			return None
+
+	# Check if Kanojo is on a date with a different user, if so return alert
+	def kanojo_date_alert(self, kanojo: dict, self_user: dict) -> None | dict[str, str]:
+		date_info = self.kanojo_date(kanojo)
+		if date_info:
+			date_user = self.db.users.find_one({"id":date_info.get('user_id')})
+
+			if self_user.get('id') != date_user.get('id'):
+				duration = date_info.get('back_time', 0) - int(time.time())
+				d_string = duration_to_str(duration)
+				return { "body": f"She is on a date with {date_user.get('name', 'NO NAME')}, coming back {d_string}.", "title": "Sorry"}
 		return None
 
-	def kanojo_date_alert(self, kanojo, user=None):
-		kanojo_date = self.kanojo_date(kanojo)
-		if kanojo_date:
-			relation_status = None
-			if 'relation_status' not in kanojo and user:
-				relation_status = self.relation_status(kanojo, user)
-			elif 'relation_status' in kanojo:
-				relation_status = kanojo.get('relation_status')
-			if relation_status != RELATION_KANOJO:
-				duration = kanojo_date.get('back_time', 0) - int(time.time())
-				d_string = self.duration_to_str(duration)
-				return { "body": f"She on the trip, coming back {d_string}.", "title": "Sorry"}
-		return None
-
-	def clear(self, kanojo, self_user=None, clear=CLEAR_SELF, check_clothes=False, owner_user=None):
+	# Prepare Kanojo to be sent to the app/webpage
+	def clear(self, kanojo: dict, self_user=None, clear=CLEAR_SELF, check_clothes=False, owner_user=None) -> None | dict | OrderedDict:
 		if kanojo is None:
 			# TODO: maybe should return somthing else?
 			return kanojo
+
 		if clear == CLEAR_NONE:
 			return kanojo
+
+		#Keys we want to allow through to the app
 		allow_keys = ['mouth_type', 'skin_color', 'body_type', 'race_type', 'spot_type', 'sexual', 'recognition', 'clothes_type', 'brow_type', 'consumption', 'eye_position', 'accessory_type', 'possession', 'hair_type', 'clothes_color', 'ear_type', 'brow_position', 'eye_color', 'glasses_type', 'hair_color', 'face_type', 'eye_type', 'mouth_position', 'fringe_type', 'nose_type', 'flirtable']
 
 		# select clothes must call before change kanojo db document
@@ -377,20 +412,15 @@ class KanojoManager(object):
 			if changed:
 				self.save(kanojo)
 
+		#Copy Kanojo so we don't modify the OG
 		tmp_kanojo = copy.copy(kanojo)
 		self.fill_fields(tmp_kanojo, self_user=self_user, owner_user=owner_user)
+
+		#Hide Barcode if she was not scanned by current user
 		if tmp_kanojo.get('relation_status') != RELATION_KANOJO:
 			tmp_kanojo['barcode'] = '************'
 
-		curr_date = self.kanojo_date(tmp_kanojo)
-		if curr_date:
-			if tmp_kanojo.get('relation_status') == RELATION_KANOJO:
-				if 'background_image_url' in curr_date:
-					tmp_kanojo['avatar_background_image_url'] = curr_date.get('background_image_url')
-			else:
-				tmp_kanojo['in_room'] = False
-
-		allow_keys.extend(['id', 'profile_image_url', 'name', 'mascot_enabled', 'like_rate', 'love_gauge', 'location', 'nationality', 'avatar_background_image_url', 'advertising_product_url', 'birth_day', 'birth_month', 'birth_year', 'emotion_status', 'on_advertising', 'goods_button_visible', 'follower_count', 'advertising_banner_url', 'advertising_product_title', 'voted_like', 'relation_status', 'status', 'in_room'])
+		allow_keys.extend(['id', 'profile_image_url', 'name', 'mascot_enabled', 'like_rate', 'love_gauge', 'location', 'nationality', 'avatar_background_image_url', 'advertising_product_url', 'birth_day', 'birth_month', 'birth_year', 'emotion_status', 'goods_button_visible', 'follower_count', 'advertising_banner_url', 'advertising_product_title', 'voted_like', 'relation_status', 'status', 'in_room'])
 		if tmp_kanojo.get('relation_status') > RELATION_OTHER:
 			allow_keys.extend(['barcode', 'source', 'geo'])
 		rv = { key: tmp_kanojo[key] for key in allow_keys if key in tmp_kanojo }
@@ -464,30 +494,33 @@ class KanojoManager(object):
 			rv.append(k_info)
 		return rv
 
-	def select_clothes(self, kanojo, test_time=None):
+	def select_clothes(self, kanojo: dict, hour: int=None):
 		'''
 			return - (clothes_type, changed)
 		'''
+
 		wardrobe = kanojo.get('wardrobe')
 		if (not wardrobe) or len(wardrobe) == 0:
 			self.add_clothes(kanojo, kanojo['clothes_type'])
 			wardrobe = kanojo.get('wardrobe')
 		if wardrobe:
 			wardrobe_ids = [el.get('id') for el in wardrobe]
-			tm = int(time.time()) if test_time is None else test_time
+			tm = time.time()
 
 			# check if wardrobe used now
 			if 'clothes_selected' in kanojo and tm < kanojo.get('clothes_selected').get('undress_time', 0):
 				return kanojo.get('clothes_selected').get('clothes_type', kanojo.get('clothes_type')), False
 
 			days_age = int((tm - kanojo.get('birthday', 0)) / (24 * 60 * 60))
-			tz_string = kanojo.get('timezone', 'Europe/Kiev')
-			hour = datetime.fromtimestamp(tm, pytz.timezone(tz_string)).hour
+			if hour is None:
+				#if hour of day is not supplied use server hour
+				hour = datetime.fromtimestamp(tm).hour
 
 			# search all clothes that can dress in this hour and calc 'weight_full'
 			clothes_info = [el for el in self.dress_up_time1 if el.get('id') in wardrobe_ids and el.get('dress_up_from')<=hour<el.get('dress_up_to')]
 			clothes_info.extend([el for el in self.dress_up_time2 if el.get('id') in wardrobe_ids and (hour<el.get('dress_up_to') or hour>=el.get('dress_up_from'))])
 			clothes_info = copy.deepcopy(clothes_info)
+
 			#weight_full = reduce(lambda x,y: x+y.get('like_weight'), clothes_info, 3)
 			# TODO: do it simple
 			weight_full = 3
@@ -512,8 +545,8 @@ class KanojoManager(object):
 					undress_time = int(tm / 3600) * 3600 + dress_up_hours * 3600
 					clothes_selected['undress_time'] = undress_time
 					kanojo['clothes_selected'] = clothes_selected
-					return (clothes_selected.get('clothes_type'), True)
-		return (kanojo.get('clothes_type'), False)
+					return clothes_selected.get('clothes_type'), True
+		return kanojo.get('clothes_type'), False
 
 	def add_clothes(self, kanojo, clothes_type, like_weight_mult=1, try_on_min=5):
 		'''
@@ -540,38 +573,29 @@ class KanojoManager(object):
 		self.save(kanojo)
 		return w
 
-	def apply_date(self, kanojo, store_item):
-		if 'duration_of_date' in store_item:
-			date_info = kanojo.get('date_info', [])
-			curr_tm = int(time.time())
-			back_tm = 0
-			for d in date_info:
-				back_tm = max(d.get('back_time', 0), back_tm)
-			date = {
-				'item_id': store_item.get('item_id')
-			}
-			if 'background_image_url' in store_item:
-				date['background_image_url'] = store_item['background_image_url']
+	def apply_date(self, kanojo: dict, user: dict, date_item: dict):
+		if 'duration_of_date' in date_item:
+			date_info = kanojo.get('date_info', {})
+			curr_tm = time.time()
+
+			back_tm = date_info.get('back_time', 0)
+			date_info.update({
+				'item_id': date_item.get('item_id'),
+				'user_id': user.get('id', 0)
+			})
+			if 'date_location' in date_item:
+				date_info['date_location'] = date_item['date_location']
 			if back_tm < curr_tm:
-				date['back_time'] = curr_tm + store_item.get('duration_of_date')
+				date_info['back_time'] = curr_tm + date_item.get('duration_of_date')
 			else:
-				date['back_time'] = back_tm + store_item.get('duration_of_date')
-			print(back_tm, curr_tm, date['back_time'])
-			date_info.append(date)
+				date_info['back_time'] = back_tm + date_item.get('duration_of_date')
+			print(back_tm, curr_tm, date_info['back_time'])
 			kanojo['date_info'] = date_info
-			return date
+			return date_info
 		return None
 
-	def action_string_to_freq(self, action_string):
-		actions = [int(el) for el in action_string.split('|') if el != '']
-		freq = {}
-		for act in actions:
-			if act not in freq:
-				freq[act] = len([el for el in actions if el==act])
-		return freq
-
-	def user_action_price(self, action_string):
-		freq = self.action_string_to_freq(action_string)
+	def user_action_price(self, actions: list[int]):
+		freq = actions_to_freq(actions)
 		if not freq:
 			return False
 		swipe = freq.pop(USER_ACTION_SWIPE, 0)
@@ -582,7 +606,7 @@ class KanojoManager(object):
 		price = swipe + shake + touch_head + kiss + breasts
 		return { 'price_s': price*5 }
 
-	def _kanojo_love_increment(self, kanojo, user, love_change, relation_status=None):
+	def _kanojo_love_increment(self, kanojo: dict, user: dict, love_change, relation_status=None):
 		rv = {
 			'code': 200,
 			'info': {},
@@ -641,11 +665,11 @@ class KanojoManager(object):
 
 		return rv
 
-	def user_action(self, kanojo, user, action_string):
+	def user_action(self, kanojo: dict, user: dict, actions: list[int]):
 		rv = { 'code': 400 }
-		if action_string:
+		if actions:
 			relation_status = self.relation_status(kanojo, user)
-			freq = self.action_string_to_freq(action_string)
+			freq = actions_to_freq(actions)
 			if not freq:
 				return rv
 
@@ -666,23 +690,23 @@ class KanojoManager(object):
 
 			rv = self._kanojo_love_increment(kanojo, user, action_weight, relation_status=relation_status)
 
-			rv['info']['actions'] = action_string
+			rv['info']['actions'] = actions
 
 			#rv['info']['a'] doesn't seem to be used
 			if kiss == 0 and breasts == 0:
 				rv['info']['a'] = max(freq, key=freq.get)
 			else:
-				pk = action_string.find('20') if kiss > 0 else len(action_string)
-				pb = action_string.find('21') if breasts > 0 else len(action_string)
+				pk = 20 in actions if kiss > 0 else len(actions)
+				pb = 21 in actions if breasts > 0 else len(actions)
 				rv['info']['a'] = 20 if pk < pb else 21
 		return rv
 
 	def user_do_gift_calc_kanojo_love_increment(self, kanojo, user, store_item, is_extended=False):
 		relation_status = self.relation_status(kanojo, user)
 		action_weight = randint(50, 100)
-		if relation_status == 2:
+		if relation_status == RELATION_KANOJO:
 			action_weight = int(action_weight/5)
-		elif relation_status == 3:
+		elif relation_status == RELATION_FRIEND:
 			if is_extended:
 				action_weight = int(action_weight/10)
 			else:
@@ -693,46 +717,29 @@ class KanojoManager(object):
 		rv['info']['a'] = 2 if is_extended else 1
 		return rv
 
-	def duration_to_str(self, duration):
-		if duration < 60:
-			return '%d seconds'%duration if duration > 1 else '%d second'%duration
-		duration = int(duration/60)
-		if duration < 60:
-			return '%d minutes'%duration if duration > 1 else '%d minute'%duration
-		duration = int(duration/60)
-		if duration < 24:
-			return '%d hours'%duration if duration > 1 else '%d hour'%duration
-		duration = int(duration/24)
-		if duration < 7:
-			return '%d days'%duration if duration > 1 else '%d day'%duration
-		duration = int(duration/7)
-		return '%d weeks'%duration if duration > 1 else '%d week'%duration
-
-	def user_do_date_calc_kanojo_love_increment(self, kanojo, user, store_item, is_extended=False):
+	def user_do_date_calc_kanojo_love_increment(self, kanojo: dict, user: dict, date_item: dict, is_extended: bool=False) -> dict:
 		relation_status = self.relation_status(kanojo, user)
-		action_weight = randint(50, 100)
-		if relation_status == 2 and store_item.get('duration_of_date'):
-			d_string = self.duration_to_str(store_item.get('duration_of_date'))
-			rv = {
-				'alerts': [ { "body": "Enemies can't approach her for %s."%d_string, "title": "" } ],
-				'love_increment': {
-					'decrement_love': 0,
-					'increase_love': 0,
-					'reaction_word': None
-				}
-			}
+		action_weight = date_item.get("price_b", 0)
+		rv = {}
+		if relation_status != RELATION_OTHER and date_item.get('duration_of_date'):
+			d_string = duration_to_str(date_item.get('duration_of_date'))
+			rv.update({
+				'alerts': [{ "body":f"Enemies can't approach her for {d_string}.", "title":""}],
+			})
 			if not is_extended:
-				self.apply_date(kanojo, store_item)
-			return rv
+				self.apply_date(kanojo, user, date_item)  #TODO Save the user doing the date
+			else:
+				return rv
 		elif relation_status == RELATION_KANOJO:
 			action_weight = int(action_weight/5)
 		elif relation_status == RELATION_FRIEND:
 			action_weight = int(action_weight/20)
 		else:
 			action_weight = 0
-		rv = self._kanojo_love_increment(kanojo, user, action_weight, relation_status=relation_status)
+		rv.update(self._kanojo_love_increment(kanojo, user, action_weight, relation_status=relation_status))
 		rv['info']['a'] = 4 if is_extended else 3
 		return rv
+	#TODO Disable date menu, while on date.
 
 	def user_breakup_with_kanojo_alert(self, kanojo):
 		rv = {

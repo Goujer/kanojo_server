@@ -1,7 +1,12 @@
+#Clear levels
+CLEAR_NONE = 0
+CLEAR_SELF = 1
+CLEAR_OTHER = 2 #Not Valid for Kanojo
+
 #Kanojo Relationship Levels
-RELATION_FRIEND = 3
-RELATION_KANOJO = 2
-RELATION_OTHER = 1
+RELATION_FRIEND = 3 #0b11
+RELATION_KANOJO = 2 #0b10
+RELATION_OTHER = 1 #0b01
 
 #User Relationship Status
 USER_RELATION_ENEMY = 3

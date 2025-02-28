@@ -21,10 +21,6 @@ import config
 from constants import *
 from images import save_user_profile_image
 
-CLEAR_NONE = 0
-CLEAR_SELF = 1
-CLEAR_OTHER = 2
-
 def user_order_dict_cmp(x, y):
 	order = ('money', 'sex', 'birth_day', 'enemy_count', 'id', 'relation_status','kanojo_count', 'stamina', 'birth_month', 'email', 'birth_year', 'friend_count', 'stamina_max', 'generate_count', 'profile_image_url', 'password', 'tickets', 'name', 'language', 'level', 'scan_count', )
 	x,y = x[0], y[0]
@@ -51,7 +47,7 @@ class UserManager(object):
 					'id': 0
 				})
 
-	def create(self, uuid, name, password, email, birthday, sex, profile_image_data):
+	def create(self, uuid: str, name: str, password, email: str, birthday, sex, profile_image_data):
 		if self.db:
 			uid = self.db.seqs.find_and_modify(
 					query = {'collection': 'users'},
@@ -85,7 +81,7 @@ class UserManager(object):
 				"scan_count": 0,
 				"generate_count": 0,
 				"password": password,
-				#"stamina_max": 1080,
+				"stamina_max": 100,
 				#"relation_status": 2,
 				#"birth_day": 27,
 				#"birth_month": 7,
@@ -105,7 +101,7 @@ class UserManager(object):
 				self.db.users.insert_one(user)
 				self.last_uid = uid
 			except pymongo.errors.DuplicateKeyError:
-				return self.create(name, password, email, birthday, sex, profile_image_data)
+				return self.create(uuid, name, password, email, birthday, sex, profile_image_data)
 
 			if self.activity_manager:
 				self.activity_manager.create({
@@ -124,7 +120,7 @@ class UserManager(object):
 	@property
 	def default_user(self):
 		return {"generate_count": 0,
-				"language": "ja",
+				"language": "en",
 				"level": 1,
 				"kanojo_count": 0,
 				"money": 100,
@@ -141,7 +137,6 @@ class UserManager(object):
 				"name": 'unknown'}
 
 	def fill_fields(self, usr):
-		usr['stamina_max'] = (usr.get('level', 0) + 9) * 10
 		dt = time.gmtime(usr.get('birthday', 0))
 		usr['birth_day'] = dt.tm_mday
 		usr['birth_month'] = dt.tm_mon
@@ -150,7 +145,7 @@ class UserManager(object):
 		usr['friend_count'] = len(usr.get('friends', []))
 		usr['enemy_count'] = len(usr.get('enemies', []))
 		if not usr.get('profile_image_url'):
-			usr['profile_image_url'] = 'http://bk-dump.herokuapp.com/images/common/no_pictire_available.png'
+			usr['profile_image_url'] = '/images/common/no_picture_available.png'
 		return usr
 
 	def clear(self, usr, clear, self_uid=None, self_user=None):
@@ -199,6 +194,8 @@ class UserManager(object):
 			else:
 				user['last_login'] = int(time.time())
 				self.save(user)
+
+		# Login via username and pass
 		elif email and password:
 			query = {
 				"$and": [
@@ -219,6 +216,7 @@ class UserManager(object):
 				self.save(user)
 			else:
 				return None
+
 		if not user:
 			return None
 		else:
@@ -227,6 +225,7 @@ class UserManager(object):
 	def user(self, uuid=None, uid=None, self_uid=None, self_user=None, clear=CLEAR_SELF, email=None, password=None):
 		if not self.db:
 			return None
+
 		if uid:
 			query = { "id": uid }
 			user = self.db.users.find_one(query)
@@ -285,9 +284,9 @@ class UserManager(object):
 		if kanojo.get('id') not in user.get('friends'):
 			#user['friends'].append(kanojo['id'])
 			user['friends'].insert(0, kanojo.get('id'))
-			self.user_change(user, stamina_change=5, money_change=-25, update_db_record=False)
+			self.user_change(user, stamina_change=-5, money_change=25, update_db_record=False)
 			if increment_scan_couner:
-				self.increment_scan_couner(user, update_db_record=False)
+				self.increment_scan_counter(user, update_db_record=False)
 			if update_db_record:
 				self.save(user)
 				self.kanojo_manager.save(kanojo)
@@ -334,8 +333,8 @@ class UserManager(object):
 			#k.append(kanojo.get('id'))
 			k.insert(0, kanojo.get('id'))
 			user['kanojos'] = k
-			self.user_change(user, stamina_change=20, money_change=-100, update_db_record=False)
-			self.increment_scan_couner(user, update_db_record=True)
+			self.user_change(user, stamina_change=-20, money_change=100, tickets_change=1, update_db_record=False)
+			self.increment_scan_counter(user, update_db_record=True)
 
 			if self.activity_manager:
 				self.activity_manager.create({
@@ -345,22 +344,23 @@ class UserManager(object):
 					})
 		return kanojo
 
+	# vvv Level Calculation vvv
 	# x = lambda y: int(math.floor((2*math.sqrt(3)*math.sqrt(5*y+3888)-216)/5+1))
 	# y = FLOOR(A3*(7.2+A3/12))
 	# x - level, y - scan count 
-	def increment_scan_couner(self, user, inc_value=1, update_db_record=False):
+	def increment_scan_counter(self, user, inc_value=1, update_db_record=False):
 		user['scan_count'] = user.get('scan_count', 0) + inc_value
 		lvl = int(math.floor((2*math.sqrt(3)*math.sqrt(5*user['scan_count']+3888)-216)/5+1))
 		if user.get('level') < lvl:
-			lvl_diff = lvl - user.get('level', 0)
 			user['level'] = lvl
-			self.user_change(user, money_change=-lvl_diff*1000, up_stamina=True, update_db_record=False)
+			user['stamina_max'] = (user.get('level', 1) + 9) * 10
+			self.user_change(user, money_change=lvl*50, stamina_change=10, update_db_record=False)   #Money change: https://web.archive.org/web/20150107011058/http://www.barcodekanojo.com/howtoplay
 
 			if self.activity_manager:
 				self.activity_manager.create({
 						'activity_type': ACTIVITY_BECOME_NEW_LEVEL,
 						'user': user,
-						'activity': '{user_name} became Lev.\"' + str(lvl) + '\".'
+						'activity': '{user_name} became Level: \"' + str(lvl) + '\".'
 					})
 		if update_db_record:
 			self.save(user)
@@ -371,7 +371,7 @@ class UserManager(object):
 			user['kanojos'].insert(0, user['kanojos'].pop(user['kanojos'].index(kid)))
 		if kid in user.get('friends'):
 			user['friends'].insert(0, user['friends'].pop(user['friends'].index(kid)))
-		self.increment_scan_couner(user, update_db_record=True)
+		self.increment_scan_counter(user, update_db_record=True)
 		self.kanojo_manager.increment_scan_counter(kanojo, update_db_record=True)
 
 	def set_like(self, user, kanojo, like_value, update_db_record=False) -> bool:
@@ -462,7 +462,8 @@ class UserManager(object):
 			}
 		return rv
 
-	def do_date(self, user, kanojo, store_item_id):
+	#Only for extended dates
+	def do_extended_date(self, user: dict, kanojo: dict, store_item_id):
 		has_item = [x for x in user.get('has_items', []) if x.get('store_item_id')==store_item_id]
 		if len(has_item) and has_item[0].get('units', 1) >= 1:
 			has_item = has_item[0]
@@ -470,7 +471,7 @@ class UserManager(object):
 			store_item = self.store.get_date(store_item_id)
 
 			action_dict = self.kanojo_manager.user_do_date_calc_kanojo_love_increment(kanojo, user, store_item, is_extended=True)
-			self.kanojo_manager.apply_date(kanojo, store_item)
+			self.kanojo_manager.apply_date(kanojo, user, store_item)
 
 			self.check_approached_kanojo(user, kanojo, action_dict.get('info', {}))
 
@@ -490,28 +491,25 @@ class UserManager(object):
 			}
 		return rv
 
-	def user_change(self, user, stamina_change=0, money_change=0, tickets_change=0, up_stamina=False, update_db_record=True):
+	#Returning false means action cannot be afforded
+	def user_change(self, user: dict, stamina_change=0, money_change=0, tickets_change=0, update_db_record=True):
 		'''
 			change user stamina/money/tickets
+			Returns:
+				bool:false means action cannot be afforded
 		'''
 		if stamina_change:
-			if user.get('stamina', 0) < stamina_change:
+			if user.get('stamina', 0) + stamina_change < 0 or user.get('stamina', 0) + stamina_change > user.get('stamina_max', (user.get('level', 1) + 9) * 10):
 				return False
-			user['stamina'] = user.get('stamina', 0) - stamina_change
+			user['stamina'] = user.get('stamina', 0) + stamina_change
 		if money_change:
-			if user.get('money', 0) < money_change:
+			if user.get('money', 0) + money_change < 0:
 				return False
-			user['money'] = user.get('money', 0) - money_change
+			user['money'] = user.get('money', 0) + money_change
 		if tickets_change:
-			if user.get('tickets', 0) < tickets_change:
+			if user.get('tickets', 0) + tickets_change < 0:
 				return False
-			user['tickets'] = user.get('tickets', 0) - tickets_change
-		if up_stamina:
-			stamina_max = (user.get('level', 0) + 9) * 10
-			if user.get('stamina', 0) >= stamina_max:
-				return False
-			else:
-				user['stamina'] += 1
+			user['tickets'] = user.get('tickets', 0) + tickets_change
 		if update_db_record:
 			self.save(user)
 		return user
@@ -560,7 +558,7 @@ class UserManager(object):
 					})
 		return kanojo_love_increment_info.get('change_owner')
 
-	def user_action(self, user, kanojo, action_string=None, do_gift=None, do_date=None, is_extended_action=False, current_owner=None):
+	def user_action(self, user: dict, kanojo: dict, actions: list[int]=None, do_gift=None, do_date=None, is_extended_action: bool=False, current_owner: dict=None):
 		'''
 			is_extended_action - for extended gifts and dates
 		'''
@@ -569,8 +567,8 @@ class UserManager(object):
 
 		# check if user can use this action
 		store_item = None
-		if action_string:
-			price = self.kanojo_manager.user_action_price(action_string)
+		if actions:
+			price = self.kanojo_manager.user_action_price(actions)
 			#if not price:
 			#    return False
 		elif do_gift:
@@ -592,11 +590,12 @@ class UserManager(object):
 		if user.get('level') < price.get('level', 0):
 			return { "code": 403, "love_increment": { "alertShow": 1 }, "alerts": [ { "body": "You level to low.", "title": "" } ] }
 
-		# do action
+		# Do action
 		rv = { 'code': 200 }
-		if action_string:
-			action_dict = self.kanojo_manager.user_action(kanojo, user, action_string)
+		if actions:
+			action_dict = self.kanojo_manager.user_action(kanojo, user, actions)
 			rv.update(action_dict)
+		#Do Gift
 		elif do_gift:
 			if is_extended_action:
 				action_dict = self.add_store_item(user, store_item)
@@ -620,6 +619,7 @@ class UserManager(object):
 			else:
 				action_dict = self.kanojo_manager.user_do_gift_calc_kanojo_love_increment(kanojo, user, store_item, is_extended=is_extended_action)
 				rv.update(action_dict)
+		#Do Date
 		elif do_date:
 			if is_extended_action:
 				action_dict = self.add_store_item(user, store_item)
@@ -648,7 +648,7 @@ class UserManager(object):
 
 		self.kanojo_manager.save(kanojo)
 		if not rv.get('info', {}).get('busy'):
-			self.user_change(user, stamina_change=price.get('price_s', 0), money_change=price.get('price_b', 0), tickets_change=price.get('price_t', 0), update_db_record=True)
+			self.user_change(user, stamina_change=-price.get('price_s', 0), money_change=-price.get('price_b', 0), tickets_change=-price.get('price_t', 0), update_db_record=True)
 		return rv
 
 	def breakup_with_kanojo(self, user, kanojo, update_db_record=True):

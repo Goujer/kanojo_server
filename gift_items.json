@@ -1,0 +1,412 @@
+{
+	"categories": [
+		{
+			"item_category_id": 1,
+			"title": "B coin",
+			"relation_level": 3
+		},
+		{
+			"item_category_id": 6,
+			"group_title": "Wardrobe",
+			"title": "Clothes",
+			"description": "Buy clothes for your Kanojo or friends as a present!",
+			"image_thumbnail_url": "/images/store/wardrobe_thm.png",
+			"expand_flag": 0,
+			"relation_level": 3
+		},
+		{
+			"item_category_id": 24,
+			"group_title": "Wardrobe",
+			"title": "EyeWear",
+			"description": "Be more fashionable with glasses! Give it to her now!",
+			"image_thumbnail_url": "/images/store/category_glasses.png",
+			"expand_flag": 0,
+			"relation_level": 3
+		},
+		{
+			"item_category_id": 46,
+			"group_title": "Wardrobe",
+			"title": "B COIN",
+			"description": "B coin",
+			"image_thumbnail_url": "/images/store/item_bcoin_thm.png",
+			"expand_flag": 0,
+			"relation_level": 7
+		},
+		{
+			"item_category_id": 44,
+			"group_title": "Wardrobe",
+			"title": "Wedding Ware",
+			"description": "Wedding Ware For Permanent Kanojo",
+			"image_thumbnail_url": "/images/store/item_permanant_kanojo_thm.png",
+			"expand_flag": 1,
+			"relation_level": 1
+		},
+		{
+			"item_category_id": 7,
+			"group_title": "Portion",
+			"title": "Energy Drinks",
+			"description": "Gain your Stamina.",
+			"image_thumbnail_url": "/images/store/drink_energy_thm.png",
+			"expand_flag": 0,
+			"relation_level": 7
+		},
+		{
+			"item_category_id": 8,
+			"group_title": "Other",
+			"title": "Goodbye Letter",
+			"description" :"To dump your Kanojo...",
+			"image_thumbnail_url": "/images/store/letter_goodbye_thm.png",
+			"expand_flag": 0,
+			"relation_level": 3
+		}
+	],
+
+	"items": [
+		{
+			"category_id": 1,
+			"item_id": 1,
+			"title": "A bunch of flowers",
+			"description": "Any KANOJOs love flowers. This item may increase KANOJO's love level.",
+			"image_thumbnail_url": "/images/store/gift_flower_thm.png",
+			"image_url": "/images/store/gift_flower.png",
+			"price": "Price: 25B Coins",
+			"price_b": 25,
+			"purchasable_level": 1
+		},
+		{
+			"category_id": 1,
+			"item_id": 2,
+			"title": "Perfume",
+			"description": "A bit fancy gift. This item may increase KANOJO's love level.",
+			"image_thumbnail_url": "/images/store/gift_perfume_thm.png",
+			"image_url": "/images/store/gift_perfume.png",
+			"price": "Price: 40B Coins",
+			"price_b": 40,
+			"purchasable_level": 1
+		},
+		{
+			"category_id": 1,
+			"item_id": 3,
+			"title": "Wallet",
+			"description": "MISSING DESCRIPTION",
+			"image_thumbnail_url": "/images/store/gift_wallet_thm.png",
+			"image_url": "/images/store/gift_wallet.png",
+			"price": "Price: 50B Coins",
+			"price_b": 50,
+			"purchasable_level": 1
+		},
+		{
+			"category_id": 1,
+			"item_id": 4,
+			"title": "Name-brand bag",
+			"description": "MISSING DESCRIPTION",
+			"image_url": "/images/store/gift_bag.png",
+			"image_thumbnail_url": "/images/store/gift_bag_thm.png",
+			"purchasable_level": 1,
+			"price": "Price: 100B Coins",
+			"price_b": 100
+		},
+
+
+		{
+			"category_id": 6,
+			"group": "Basic Wear",
+			"item_id": 11,
+			"clothes_item_id": 1,
+			"title": "Henley (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0011",
+			"image_url": "/images/store/wardrobe_clothes_0011.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_0011_thm.png",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+		{
+			"category_id": 6,
+			"group": "Basic Wear",
+			"item_id": 13,
+			"clothes_item_id": 3,
+			"title": "Tank Top (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0013",
+			"image_url": "/images/store/wardrobe_clothes_0013.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_0013_thm.png",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+		{
+			"category_id": 6,
+			"group": "Basic Wear",
+			"item_id": 14,
+			"clothes_item_id": 4,
+			"title": "Collared Shirt (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0014",
+			"image_url": "/images/store/wardrobe_clothes_0014.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_0014_thm.png",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+		{
+			"category_id": 6,
+			"group": "Basic Wear",
+			"item_id": 15,
+			"clothes_item_id": 5,
+			"title": "Loose Sweater (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0015",
+			"image_url": "/images/store/wardrobe_clothes_0015.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_0015_thm.png",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+
+		{
+			"category_id": 6,
+			"group": "Business Wear",
+			"item_id": 1912,
+			"clothes_item_id": 912,
+			"title": "App Bank Shirt (UNKNOWN)",
+			"description": "Dressing time: 4:00-16:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_1912",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+		{
+			"category_id": 6,
+			"group": "Business Wear",
+			"item_id": 1913,
+			"clothes_item_id": 913,
+			"title": "App Bank Tank Top (UNKNOWN)",
+			"description": "Dressing time: 4:00-16:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_1913",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+
+		{
+			"category_id": 6,
+			"group": "Room Wear",
+			"item_id": 1051,
+			"clothes_item_id": 51,
+			"title": "Light Nightgown (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"image_url": "/images/store/wardrobe_clothes_1051.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_1051_thm.png",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchase_product_id": "wardrobe_clothes_1051",
+			"purchasable_level": 1
+		},
+
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1050,
+			"clothes_item_id": 50,
+			"title": "V-shaped knit",
+			"description": "Dressing time: ? - ?\nMISSING DESCRIPTION\n{attention}",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_1050_thm.png",
+			"image_url": "/images/store/wardrobe_clothes_1050.png",
+			"price": "Ticket: 2",
+			"price_t": 2,
+			"_comment": "No dress up time defined",
+			"purchase_product_id": "wardrobe_clothes_1050",
+			"purchasable_level": 1
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1022,
+			"clothes_item_id": 22,
+			"title": "Red knit dress",
+			"description": "Dressing time: 14:00 - 20:00\nMISSING DESCRIPTION\n{attention}",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_1022_thm.png",
+			"image_url": "/images/store/wardrobe_clothes_1022.png",
+			"price": "Ticket: 2",
+			"price_t": 2,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1022"
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1011,
+			"clothes_item_id": 11,
+			"description": "Dressing time: 10:00 - 16:00\nMISSING DESCRIPTION\n{attention}",
+			"title": "White Sweater (UNKNOWN)",
+			"image_url": "/images/store/wardrobe_clothes_1011.png",
+			"image_thumbnail_url": "/images/store/wardrobe_clothes_1011_thm.png",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchase_product_id": "wardrobe_clothes_1011",
+			"purchasable_level": 1
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1908,
+			"clothes_item_id": 908,
+			"title": "Green Kimono (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1908"
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1909,
+			"clothes_item_id": 909,
+			"title": "Yellow Kimono (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1909"
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1910,
+			"clothes_item_id": 910,
+			"title": "Red Kimono (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1910"
+		},
+		{
+			"category_id": 6,
+			"group": "Casual Wear",
+			"item_id": 1911,
+			"clothes_item_id": 911,
+			"title": "Pink Kimono (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1911"
+		},
+
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1901,
+			"clothes_item_id": 901,
+			"title": "Flower Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1901"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1902,
+			"clothes_item_id": 902,
+			"title": "AXE Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1902"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1903,
+			"clothes_item_id": 903,
+			"title": "Sunburst Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1903"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1904,
+			"clothes_item_id": 904,
+			"title": "Green Frill Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1904"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1905,
+			"clothes_item_id": 905,
+			"title": "Black Frill Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1905"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1906,
+			"clothes_item_id": 906,
+			"title": "Green Bow Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMISSING DESCRIPTION\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1,
+			"purchase_product_id": "wardrobe_clothes_1906"
+		},
+		{
+			"category_id": 6,
+			"group": "Sports Wear",
+			"item_id": 1907,
+			"clothes_item_id": 907,
+			"purchase_product_id": "wardrobe_clothes_1907",
+			"title": "Camo Bikini (UNKNOWN)",
+			"description": "Dressing time: 8:00-20:00\nMissing Description\n{attention}",
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300,
+			"purchasable_level": 1
+		},
+
+		{
+			"category_id": 6,
+			"group": "Uniform",
+			"item_id": 12,
+			"clothes_item_id": 2,
+			"title": "Sailor Fuku (UNKNOWN)",
+			"description": "Dressing time: 0:00-23:00\nMISSING DESCRIPTION\n{attention}",
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0012",
+			"purchasable_level": 1,
+			"price": "B-Coin: 300 | Unknown",
+			"price_b": 300
+		},
+
+		{
+			"category_id": 8,
+			"item_id": 198,
+			"purchase_product_id": "jp.co.cybird.barcodekanojo.letter_goodbye_0001_0003",
+			"confirm_purchase_message": null,
+			"description": "To dump your Kanojo...",
+			"title": "Goodbye Letter",
+			"purchasable_level": 1,
+			"price_s": 5,
+			"image_url": "/images/store/letter_goodbye.png",
+			"image_thumbnail_url": "/images/store/letter_goodbye_thm.png",
+			"action": "dump_kanojo"
+		}
+	]
+}

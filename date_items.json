@@ -1,0 +1,104 @@
+{
+	"categories": [
+		{
+			"item_category_id": 1,
+			"title": "B coin",
+			"relation_level": 3
+		},
+		{
+			"item_category_id": 22,
+			"group_title": "Other",
+			"title": "Tickets",
+			"description": "Take her to a wonderful place!",
+			"image_thumbnail_url": "/images/store/date_date_thm.png",
+			"expand_flag": 0,
+			"relation_level": 1
+		}
+	],
+	"items": [
+		{
+			"category_id": 1,
+			"item_id": 20,
+			"title": "Movie",
+			"description": "Movie theater as a standard date spot.\nThis item may decrease KANOJO's love level towards her Partner.\n{date2h}",
+			"image_url": "/images/store/date_movie.png",
+			"image_thumbnail_url": "/images/store/date_movie_thm.png",
+			"drawable_name": "date_movie",
+			"price_b": 5,
+			"price_s": 5,
+			"duration_of_date": 7200
+		},
+		{
+			"category_id": 1,
+			"item_id": 21,
+			"title": "Aquarium",
+			"description": "MISSING DESCRIPTION\n{date4h}",
+			"image_url": "/images/store/date_aquarium.png",
+			"image_thumbnail_url": "/images/store/date_aquarium_thm.png",
+			"price_b": 10,
+			"price_s": 10,
+			"duration_of_date": 14400
+		},
+		{
+			"category_id": 1,
+			"title": "Museum",
+			"description": "A bit intellectual date spot. This date may increase KANOJO's love level.\n{date6h}",
+			"image_url": "/images/store/date_museum.png",
+			"item_id": 22,
+			"image_thumbnail_url": "/images/store/date_museum_thm.png",
+			"price_b": 20,
+			"price_s": 20,
+			"duration_of_date": 21600
+		},
+		{
+			"category_id": 1,
+			"item_id": 23,
+			"title": "Amusement Park",
+			"description": "Impressive Dating at amusement park!\n{date12h}",
+			"image_url": "/images/store/date_amusement_park.png",
+			"image_thumbnail_url": "/images/store/date_amusement_park_thm.png",
+			"price_b": 30,
+			"price_s": 30,
+			"background_image_url": "images/profile_bkgr/date_amusementp_daytime.jpg",
+			"background_image_url_night": "/images/profile_bkgr/date_amusementp_evening.jpg",
+			"duration_of_date": 43200
+		},
+		{
+			"category_id": 1,
+			"item_id": 24,
+			"title": "Domestic Trip",
+			"description": "MISSING DESCRIPTION\n{date1}",
+			"image_url": "/images/store/date_domestic_trip.png",
+			"image_thumbnail_url": "/images/store/date_domestic_trip_thm.png",
+			"price_b": 1000,
+			"price_s": 0,
+			"duration_of_date": 86400
+		},
+		{
+			"category_id": 1,
+			"item_id": 25,
+			"title": "Overseas Trip",
+			"description": "MISSING DESCRIPTION\n{date7}",
+			"image_url": "/images/store/date_overseas_trip.png",
+			"image_thumbnail_url": "/images/store/date_overseas_trip_thm.png",
+			"price_b": 3000,
+			"price_s": 0,
+			"duration_of_date": 604800
+		},
+		{
+			"category_id": 22,
+			"group": "ITEM_SECTION_DATE",
+			"item_id": 500,
+			"title": "Mt.Fuji",
+			"description": "Wonderful date against the background of Mt. Fuji!{date1}",
+			"confirm_use_message": null,
+			"image_url": "/images/store/date_fuji.png",
+			"image_thumbnail_url": "/images/store/date_fuji_thm.png",
+			"price_t": 1,
+			"duration_of_date": 43200,
+			"background_image_url": "/images/profile_bkgr/date_mt_fuji_daytime.jpg",
+			"background_image_url_night": "/images/profile_bkgr/date_mt_fuji_evening.jpg",
+			"hidden_in_store": true
+		}
+	]
+}

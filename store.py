@@ -4,6 +4,7 @@
 __author__ = 'Andrey Derevyagin, Goujer'
 __copyright__ = 'Copyright © 2014-2015, 2020-2022'
 
+import codecs
 import copy
 import json
 
@@ -12,9 +13,12 @@ from constants import *
 ITEM_DESRIPTION_DICT = {
 	# TODO make behaviour match this description better
 	'attention': '\n*Attention\nThis is consumable item.\nThis item is for the user who is at level 1 or higher.\nWhen she wears clothes, love level is cut down less likely. Effectiveness is depending upon clothes she wears.\nWhen you give her more than 1clothes at the same time, KANOJO by herself selects which clothes she wears daily. Outfits can be given by her [friends], but she often seems to put on clothes given from her [owner].\nDressing time is depending on her area(where she was born).',
-	'date1': ' Enemies won\'t be able to approach your KANOJO for 1day when using this item.\nCaution: You can use this item only for your KANOJO.',
-	'date7': ' Enemies won\'t be able to approach your KANOJO for 7days when using this item.\nCaution: You can use this item only for your KANOJO.',
-	'date12h': ' Enemies won\'t be able to approach your KANOJO for 12hours when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date7': 'Enemies won\'t be able to approach your KANOJO for 7 days when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date1': 'Enemies won\'t be able to approach your KANOJO for 1 day when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date12h': 'Enemies won\'t be able to approach your KANOJO for 12 hours when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date6h':'Enemies won\'t be able to approach your KANOJO for 6 hours when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date4h':'Enemies won\'t be able to approach your KANOJO for 4 hours when using this item.\nCaution: You can use this item only for your KANOJO.',
+	'date2h':'Enemies won\'t be able to approach your KANOJO for 2 hours when using this item.\nCaution: You can use this item only for your KANOJO.'
 }
 DESCRIPTION_FORMAT = "Dressing time: {dressing_time}\nIt throbs very much somehow when she puts this on..."
 
@@ -23,26 +27,34 @@ DESCRIPTION_FORMAT = "Dressing time: {dressing_time}\nIt throbs very much someho
 
 class StoreManager(object):
 	"""docstring for StoreManager"""
-	def __init__(self, store_file='store_items.json'):
+	def __init__(self):
 		super(StoreManager, self).__init__()
-		store_info = json.load(open(store_file, encoding='utf-8'))
-		self._items = store_info.get('items')
-		self._dates = store_info.get('dates')
-		self._categories = store_info.get('categories')
-		#store_dates = json.load(open(dates_file))
-		#self._dates_categories = store_dates.get('categories')
+		store_items = json.load(open('gift_items.json', encoding='utf-8'))
+		self._items = store_items.get('items')
+		self._items_categories = store_items.get('categories')
+
+		store_dates = json.load(open('date_items.json', encoding='utf-8'))
+		self._dates = store_dates.get('items')
+		self._dates_categories = store_dates.get('categories')
 
 	def items(self, kanojo_relation, item_class):
-		_items = self._items if item_class == 1 else self._dates
+		_items = self._items if item_class == GIFT_ITEM_CLASS else self._dates
 		ctgrs = self.categories(kanojo_relation, item_class)
 		ctgrs = [x.get('item_category_id') for x in ctgrs]
 		itms = [x for x in _items if x.get('relation_level', 0xFF) & kanojo_relation and x.get('category_id', 0) in ctgrs]
 		#itms = filter(lambda x: x.get('allow_kanojo', 0) & kanojo_relation, _items)
 		return itms
 
+	def get_dates(self, kanojo_relation):
+		_dates = self._dates
+		ctgrs = self.categories(kanojo_relation, GIFT_ITEM_CLASS)
+		ctgrs = [x.get('item_category_id') for x in ctgrs]
+		itms = [x for x in _dates if x.get('relation_level', 0xFF) & kanojo_relation and x.get('category_id', 0) in ctgrs]
+		return itms
+
 	def categories(self, kanojo_relation, item_class):
-		#_categories = self._items_categories if item_class==1 else self._dates_categories
-		ctgrs = [x for x in self._categories if x.get('kanojo_relation', 0) & kanojo_relation]
+		_categories = self._items_categories if item_class==GIFT_ITEM_CLASS else self._dates_categories
+		ctgrs = [x for x in self._items_categories if x.get('relation_level', 0) & kanojo_relation]
 		return ctgrs
 
 	def clear_category(self, ctgr):
@@ -77,7 +89,10 @@ class StoreManager(object):
 
 	def category_by_id(self, item_category_id, item_class):
 		#_categories = self._items_categories if item_class==ITEM_CLASS_GOODS else self._dates_categories
-		_ctgrs = [c for c in self._categories if c.get('item_category_id') == item_category_id]
+		if item_class == DATE_ITEM_CLASS:
+			_ctgrs = [c for c in self._dates_categories if c.get('item_category_id') == item_category_id]
+		else:
+			_ctgrs = [c for c in self._items_categories if c.get('item_category_id') == item_category_id]
 		if len(_ctgrs):
 			return _ctgrs[0]
 		return None
@@ -90,7 +105,10 @@ class StoreManager(object):
 			i = _itms[0]
 			c = self.category_by_id(i.get('category_id'), item_class=item_class)
 			if c:
-				_ctgrs = [el for el in self._categories if el.get('group_title', -1) == c.get('group_title', -2) or el.get('item_category_id') == c.get('item_category_id')]
+				if item_class == DATE_ITEM_CLASS:
+					_ctgrs = [el for el in self._dates_categories if el.get('group_title', -1) == c.get('group_title', -2) or el.get('item_category_id') == c.get('item_category_id')]
+				else:
+					_ctgrs = [el for el in self._items_categories if el.get('group_title', -1) == c.get('group_title', -2) or el.get('item_category_id') == c.get('item_category_id')]
 				val = {
 					'items': []
 				}
@@ -138,7 +156,9 @@ class StoreManager(object):
 		return self._item_list(kanojo_relation=kanojo_relation, item_class=GIFT_ITEM_CLASS, user_level=user_level, filter_has_items=filter_has_items, has_items=has_items)
 
 	def dates_list(self, kanojo_relation, user_level=None, filter_has_items=False, has_items=None):
-		return self._item_list(kanojo_relation=kanojo_relation, item_class=DATE_ITEM_CLASS, user_level=user_level, filter_has_items=filter_has_items, has_items=has_items)
+		items = self.get_dates(kanojo_relation)
+		return self._items2categories(items, item_class=DATE_ITEM_CLASS, user_level=user_level, has_items=has_items, set_user_has_flag=filter_has_items)
+		#return self._item_list(kanojo_relation=kanojo_relation, item_class=DATE_ITEM_CLASS, user_level=user_level, filter_has_items=filter_has_items, has_items=has_items)
 
 	def _category_items2categories(self, itms, set_user_has_flag=False, has_items=None):
 		item_categories = []

@@ -1,5 +1,4 @@
 {
-
 	"categories": [
 		{
 			"item_category_id": 1,
@@ -8,8 +7,8 @@
 		},
 		{
 			"item_category_id": 6,
+			"description": "Buy clothes for your Kanojo or friends as a present!",
 			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/wardrobe_thm.png",
-			"description": "Buy clothes to your Kanojo or friends for present!",
 			"expand_flag": 0,
 			"title": "Clothes",
 			"relation_level": 3,
@@ -43,18 +42,18 @@
 			"group_title": "Wardrobe"
 		},
 		{
+			"group_title": "Portion",
 			"item_category_id": 7,
 			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/drink_energy_thm.png",
 			"description": "Gain your Stamina.",
 			"expand_flag": 0,
 			"title": "Energy Drinks",
-			"relation_level": 7,
-			"group_title": "Portion"
+			"relation_level": 7
 		},
 		{
 			"item_category_id": 8,
-			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/letter_goodbye_thm.png",
 			"description" :"To dump your Kanojo...",
+			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/letter_goodbye_thm.png",
 			"expand_flag": 0,
 			"title": "Goodbye Letter",
 			"relation_level": 3,
@@ -62,12 +61,12 @@
 		},
 		{
 			"item_category_id": 22,
-			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/date_date_thm.png",
-			"description": "Take her to a wonderful place!",
-			"expand_flag": 0,
+			"group_title": "Other",
 			"title": "CATEGORY_SECTION_DATE",
-			"relation_level": 1,
-			"group_title": "Other"
+			"description": "Take her to a wonderful place!",
+			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/date_date_thm.png",
+			"expand_flag": 0,
+			"relation_level": 1
 		}
 	],
 
@@ -96,10 +95,10 @@
 		{
 			"item_id": 101,
 			"clothes_item_id": 8,
+			"title": "Jacket (black)",
+			"description": "Dressing time: Daytime\nChic and elegant black jacket.{attention}",
 			"purchase_product_id": "jp.co.cybird.barcodekanojo.wardrobe_clothes_0001",
 			"confirm_purchase_message": null,
-			"description": "Dressing time: Daytime\nChic and elegant black jacket.{attention}",
-			"title": "Jacket (black)",
 			"purchasable_level": 1,
 			"image_url": "https://www.barcodekanojo.com/images/store/wardrobe_clothes_0001.png",
 			"image_thumbnail_url": "https://www.barcodekanojo.com/images/store/wardrobe_clothes_0001_thm.png",

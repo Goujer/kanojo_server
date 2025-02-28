@@ -531,13 +531,13 @@
 		},
 
 		{
-			"data": [ "Finally got to see you…", "I brought stuff to stay the night with.", "I can't be without you anymore." ],
-			"a": [3]
-		},
-		{
-			"data": [ "Finally got to see you…", "I might start crying just by seeing you…", "I think I can't live without you." ],
+			"data": ["Finally got to see you…", "I brought stuff to stay the night with.", "I can't be without you anymore." ],
 			"a": [3],
 			"pod": [2,3]
+		},
+		{
+			"data": ["Finally got to see you…", "I might start crying just by seeing you…", "I think I can't live without you." ],
+			"a": [3]
 		},
 		{
 			"data": ["I finally got to see you…", "I don’t wanna go home tonight.", "…Is that okay?"],
@@ -942,7 +942,7 @@
 		},
 		{
 			"data": ["When you gently pet me like that…", "I feel like my heart's floating around.", "I don't feel like myself."],
-			"a": [20,10]
+			"a": [12]
 		},
 		{
 			"data": ["Hey.", "You're a little tense.", "Are you imagining stuff?"],
@@ -958,11 +958,11 @@
 		},
 		{
 			"data": ["Hey.", "Keep petting me for a while.", "It's comforting."],
-			"a": [20]
+			"a": [12]
 		},
 		{
 			"data": ["Your hands, they're really hot.", "I think that heat is making me hot.", "My body is getting really hot."],
-			"a": [20]
+			"a": [10,12,21]
 		},
 		{
 			"data": ["I really missed you.", "It was only for a little bit.", "I'm really comfortable right now."],
@@ -2250,11 +2250,11 @@
 		},
 		{
 			"data": ["You have big, warm hands…", "Really different from mine.", "…"],
-			"a": [20,21]
+			"a": [10,12,21]
 		},
 		{
 			"data": ["Hmm.", "Does it make you want to touch it?", "My breasts."],
-			"a": [20,21]
+			"a": [21]
 		},
 		{
 			"data": ["Good Morning.", "…Uh….hey…did you just…?", "Do I look like that kind of girl?"],

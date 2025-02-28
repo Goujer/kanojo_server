@@ -5,6 +5,7 @@ __author__ = 'Andrey Derevyagin,  Goujer'
 __copyright__ = 'Copyright © 2014-2015, 2020-2022'
 
 import atexit
+import datetime
 import os.path
 import re
 import ssl
@@ -102,6 +103,9 @@ def get_remote_ip():
 	else:
 		remote_ip = request.headers.getlist("X-Forwarded-For")[0]
 	return remote_ip
+
+def get_server_part_of_day() -> int:
+	return ((datetime.now().hour + 3) % 24) // 6
 
 @app.route('/')
 def index():
@@ -614,40 +618,24 @@ def kanojo_html(kid):
 
 ### --------------- KANOJO SERVER ---------------
 
-@app.route('/api/account/verify.json', methods=['GET', 'POST'])
-def acc_verify():
-	prms = request.form if request.method == 'POST' else request.args
-	uuid = prms.get('uuid')
-	email = prms.get('email')
-	password = prms.get('password')
-	api = prms.get('api')
-	language = prms.get('language')
-	if api and language:
-		ip_hash = hashlib.md5(get_remote_ip().encode('utf-8'), usedforsecurity=False).hexdigest()
-		client_data = {'client':ip_hash,
-						'api':int(api),
-						'language':language}
-		db['analytics'].replace_one({'client': ip_hash}, client_data, True)
-	if uuid:
-		user = user_manager.login(uuid=uuid, email=email, password=password)
-		if not user:
-			return jsonify({ "code": 404, "alerts": [{"body": "User not found", "title": "Warning"}]})
-		session['id'] = user.get('id')
-		return jsonify({ "code": 200, "user": user })
-	else:
-		return jsonify({ "code": 400 })
-
 @app.route('/api/account/signup.json', methods=['POST'])
 def acc_signup():
+	# Get parameters
 	prms = request.form
-	uuid = prms.get('uuid')
-	name = prms.get('name', generate_name())
-	password = prms.get('password')
-	email = prms.get('email').lower()
-	birthday = int(time.mktime(time.strptime('%s-%s-%s 12:00:00' % (prms.get('birth_year', 1990), prms.get('birth_month', 1), prms.get('birth_day', 1)), '%Y-%m-%d %H:%M:%S'))) - time.timezone
-	sex = prms.get('sex', 'Not Sure')
-	profile_image_data = prms.get('profile_image_data')
+	try:
+		uuid = prms.get('uuid').lower()
+		name = prms.get('name', generate_name())
+		password = prms.get('password').upper()
+		email = prms.get('email').lower()
+		birthday = int(time.mktime(time.strptime('%s-%s-%s 12:00:00' % (prms.get('birth_year', 1990), prms.get('birth_month', 1), prms.get('birth_day', 1)), '%Y-%m-%d %H:%M:%S'))) - time.timezone
+		sex = prms.get('sex', 'Not Sure')
+		profile_image_data = prms.get('profile_image_data')
+	except BaseException as e:
+		return jsonify({"code":400, "alerts": [{"body": str(e) ,"title": "Parameter Error"}]})
+
 	if uuid and email and password:
+
+		#Make sure email is not in use already
 		query = {
 			"email": {
 				"$exists": True,
@@ -658,6 +646,7 @@ def acc_signup():
 		if existing_user:
 			return jsonify({"code": 400, "alerts": [{"body": "Email already in use.", "title": ""}]})
 		else:
+			# No existing user, we're good to make a new user
 			user = user_manager.create(uuid, name, password, email, birthday, sex, profile_image_data)
 			if not user:
 				return jsonify({"code": 507})
@@ -666,6 +655,115 @@ def acc_signup():
 				return jsonify({"code": 200, "user": user_manager.clear(user, clear=CLEAR_SELF)})
 	else:
 		return jsonify({"code": 400})
+
+@app.route('/api/account/verify.json', methods=['GET', 'POST'])
+def acc_verify():
+	# Get parameters
+	try:
+		prms = request.form if request.method == 'POST' else request.args
+		uuid = prms.get('uuid').lower()
+		email = prms.get('email')
+		password = prms.get('password')
+		api = prms.get('api')
+		language = prms.get('language')
+	except BaseException as e:
+		return jsonify({"code":400, "alerts": [{"body": str(e) ,"title": "Parameter Error"}]})
+
+	# Clean Parameters
+	if api:
+		api = int(api)
+	if email:
+		email = email.lower()
+	if password:
+		password = password.upper()
+
+	# Save user analytics if provided
+	if api and language:
+		ip_hash = hashlib.md5(get_remote_ip().encode('utf-8'), usedforsecurity=False).hexdigest()
+		client_data = {'client':ip_hash,
+						'api':api,
+						'language':language}
+		db['analytics'].replace_one({'client': ip_hash}, client_data, True)
+
+	# Preform account verification
+	if uuid:
+		user = user_manager.login(uuid=uuid, email=email, password=password)
+		if not user:
+			return jsonify({ "code": 404, "alerts": [{"body": "User not found", "title": "Warning"}]})
+		session['id'] = user.get('id')
+		return jsonify({ "code": 200, "user": user })
+	else:
+		return jsonify({ "code": 400 })
+
+@app.route('/api/account/update.json', methods=['POST'])
+@set_parsers(BKMultipartParser)
+def account_update():
+	# Yeet out those without cookies
+	if 'id' not in session:
+		return jsonify({ "code": 401 })
+
+	parser = BKMultipartParser()
+	options = {
+		'content_length': request.headers.get('content_length')
+	}
+	(prms, files) = parser.parse(request.stream.read(), request.headers.get('Content-Type'), **options)
+
+	self_user_id = session['id']
+	self_user = user_manager.user(uid=self_user_id, clear=CLEAR_NONE)
+
+	updated = False
+	if 'name' in prms:
+		self_user['name'] = prms['name']
+		updated = True
+	if 'new_password' in prms and (('current_password' in prms and self_user['password'] == prms['current_password'].upper()) or self_user['password'] == ''):
+		self_user['password'] = prms['new_password'].upper()
+		updated = True
+	if 'email' in prms:
+		new_email = prms['email'].lower()
+		if new_email != self_user['email']:
+
+			# Make sure new email is not another user's email
+			query = {
+				"email": {
+					"$exists": True,
+					"$eq": new_email
+				}
+			}
+			existing_user = db.users.find_one(query)
+			if existing_user:
+				return jsonify({"code": 400, "alerts": [{"body": "Email already in use.", "title": ""}]})
+			else:
+				self_user['email'] = new_email
+				updated = True
+	if 'birth_year' in prms and 'birth_month' in prms and 'birth_day' in prms:
+		self_user['birthday'] = int(time.mktime(time.strptime('%s-%s-%s 12:00:00'%(prms['birth_year'], prms['birth_month'], prms['birth_day'] ), '%Y-%m-%d %H:%M:%S'))) - time.timezone
+		updated = True
+	if 'sex' in prms:
+		self_user['sex'] = prms['sex']
+		updated = True
+	if 'profile_image_data' in files:
+		f = files['profile_image_data']
+		save_user_profile_image(f.stream, self_user_id)
+		updated = True
+
+	if updated:
+		user_manager.save(self_user)
+
+	rspns = {'code': 200,
+				"alerts": [{"body": "Your account have been saved.", "title": ""}],
+				'user': user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)}
+	return jsonify(rspns)
+
+@app.route('/api/account/show.json', methods=['GET'])
+def account_show():
+	if 'id' not in session:
+		return jsonify({ "code": 401 })
+
+	user = user_manager.user(uid=session['id'], clear=CLEAR_SELF)
+	if user:
+		return jsonify({ "code": 200, "user": user })
+	else:
+		return jsonify({ "code": 404 })
 
 @app.route('/api/account/delete.json', methods=['POST'])
 def acc_delete():
@@ -681,18 +779,6 @@ def acc_delete():
 				return jsonify({"code": 500})
 		else:
 			return jsonify({"code": 400})
-
-@app.route('/api/account/show.json', methods=['GET'])
-def account_show():
-	if 'id' not in session:
-		return json_response({ "code": 401 })
-
-	user = user_manager.user(uid=session['id'], clear=CLEAR_SELF)
-	if user:
-		return jsonify({ "code": 200, "user": user })
-	else:
-		return jsonify({ "code": 404 })
-
 
 #TODO Fix Search
 @app.route('/user/current_kanojos.json', methods=['GET','POST'])
@@ -826,10 +912,13 @@ def kanojo_show():
 	if prms.get('kanojo_id') is None or prms.get('screen') is None:
 		return json_response({ "code": 400 })
 	kanojo_id = int(prms.get('kanojo_id'))
-	rspns = { "code": 200 }
-	rspns['messages'] = {"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user."}
+
+	rspns = {"code":200,
+		'messages': {
+			"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user."}}
 	self_user = user_manager.user(uid=session['id'], clear=CLEAR_NONE)
 	kanojo = kanojo_manager.kanojo(kanojo_id, self_user=self_user, clear=CLEAR_NONE)
+
 	if kanojo:
 		owner_user = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_NONE)
 		rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, owner_user=owner_user, clear=CLEAR_OTHER, check_clothes=True)
@@ -837,12 +926,12 @@ def kanojo_show():
 
 		rspns['product'] = as_product(kanojo)
 
-		kanojo_date_alert = kanojo_manager.kanojo_date_alert(kanojo)
+		kanojo_date_alert = kanojo_manager.kanojo_date_alert(kanojo, self_user)
 		if kanojo_date_alert:
 			rspns['alerts'] = [ kanojo_date_alert, ]
 	else:
-		rspns = { "code": 404 }
-		rspns['alerts'] = [{"body": "The Requested KANOJO was not found.", "title": ""}]
+		rspns = {"code":404,
+			'alerts':[{"body":"The Requested KANOJO was not found.", "title":""}]}
 	return json_response(rspns)
 
 @app.route('/user/enemy_users.json', methods=['GET','POST'])
@@ -877,12 +966,11 @@ def communication_play_on_live2d():
 		return json_response({ "code": 401 })
 
 	prms = request.form if request.method == 'POST' else request.args
-	if prms.get('kanojo_id') is None or prms.get('actions') is None:
-		return json_response({ "code": 400 })
 
 	try:
 		kanojo_id = int(prms.get('kanojo_id'))
-		actions = prms.get('actions')
+		actions = [int(el) for el in prms.get('actions').split('|') if el != '']
+		pod = int(prms.get('pod', get_server_part_of_day()))
 	except ValueError:
 		return json_response({ "code": 400 })
 
@@ -893,20 +981,16 @@ def communication_play_on_live2d():
 	if kanojo:
 		owner_user = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_NONE)
 		rspns['owner_user'] = user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)
-		#url = request.url_root+'apibanner/kanojoroom/reactionword.html'
-		url = server_url() + 'web/reactionword.html'
 
 		if actions and len(actions):
-			dt = user_manager.user_action(self_user, kanojo, action_string=actions, current_owner=owner_user)
+			dt = user_manager.user_action(self_user, kanojo, actions=actions, current_owner=owner_user)
 
 			if 'love_increment' in dt and 'info' in dt:
-				tmp = dt.get('info', {})
-				prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
-				dt['love_increment']['reaction_word'] = f'{url}?{urllib.parse.urlencode(prms)}'
-				#print dt['love_increment']['reaction_word']
 				dt.pop('info', None)
 
 			rspns.update(dt)
+
+			rspns['kanojo_message'] = reactionword.reactionword_json(actions, pod)
 		rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 		rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER)
 	else:
@@ -1044,10 +1128,10 @@ def activity_usertimeline():
 
 
 	#return json_response({"code": 200, "activities": []})
-	data = {"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "on_advertising": None, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": False, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": None, "advertising_product_title": None, "recognition": 11}, "product": None, "user": {"friend_count": 0, "tickets": 20, "name": "everyone", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 2, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}
+	data = {"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": False, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": None, "advertising_product_title": None, "recognition": 11}, "product": None, "user": {"friend_count": 0, "tickets": 20, "name": "everyone", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 2, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}
 	return json_response(data)
 	data = json.dumps(data)
-	data = '''{"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": null, "in_room": true, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "on_advertising": null, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": true, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": null, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": false, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": null, "advertising_product_title": null, "recognition": 11}, "product": null, "user": {"friend_count": 0, "tickets": 5, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}'''
+	data = '''{"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": null, "in_room": true, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": true, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": null, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": false, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": null, "advertising_product_title": null, "recognition": 11}, "product": null, "user": {"friend_count": 0, "tickets": 5, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}'''
 	from gzip import GzipFile
 	from io import BytesIO
 	gzip_buffer = BytesIO()
@@ -1129,20 +1213,17 @@ def api_message_dialog():
 			2 - day
 			3 - evening
 	'''
-	# TODO: add more text strings
+
 	prms = request.args
 	if prms.get('a') is None or prms.get('pod') is None:
 		return jsonify({ "code": 400 })
 	try:
-		a = int(prms.get('a'))
+		action = int(prms.get('a'))
 		pod = int(prms.get('pod'))
 	except ValueError:
 		return jsonify({ "code": 400 })
-	val = reactionword.reactionword_json(a, pod)
-	returning = jsonify({ "code": 200,
-						"kanojo_message": {
-							"text": val,
-							"btn_text": "Test"}})
+
+	returning = jsonify(reactionword.reactionword_json([action], pod))
 	return returning
 
 @app.route('/api/webview/chart.json', methods=['GET'])
@@ -1204,10 +1285,11 @@ def web_i():
 def barcode_query():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
+
 	prms = request.form if request.method == 'POST' else request.args
-	if prms.get('barcode') or len(prms.get('barcode')) != 12 or len(prms.get('barcode')) != 13 is None: #If length of code is not 12 or 13 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
-		return json_response({ "code": 400 })
 	barcode = prms.get('barcode')
+	if barcode is None or (len(barcode) != 12 and len(barcode) != 13 and len(barcode) != 14): #If length of code is not 12-14 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
+		return json_response({ "code": 400 })
 	session['barcode'] = barcode
 	kanojo = kanojo_manager.kanojo_by_barcode(barcode)
 
@@ -1220,12 +1302,13 @@ def barcode_query():
 			"scan_history": {"kanojo_count": 0, "friend_count": 0, "barcode": barcode, "total_count": 0},
 			"messages": {
 				"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user.",
-				"inform_girlfriend": "She is your KANOJO, and you have scanned this barcode 0times.",
+				"inform_girlfriend": "She is your KANOJO, and you have scanned this barcode 0 times.",
 				"inform_friend": "She belongs to , and you have scanned this barcode 0times.",
 				"do_generate_kanojo": "Would you like to generate this KANOJO?\nIt requires 20 stamina.",
 				"do_add_friend": "She belongs to no one.\nDo you want to add her on your friend list ? It requires 5 stamina."
 			},
 		}
+
 		if bc:
 			bc.pop('_id', None)
 			rspns["barcode"] = bc
@@ -1369,62 +1452,6 @@ def barcode_scan_and_generate():
 
 	return jsonify(rspns)
 
-#TODO Need password verification in here
-@app.route('/api/account/update.json', methods=['POST'])
-@set_parsers(BKMultipartParser)
-def account_update():
-	if 'id' not in session:
-		return json_response({ "code": 401 })
-	parser = BKMultipartParser()
-	options = {
-		'content_length': request.headers.get('content_length')
-	}
-	(prms, files) = parser.parse(request.stream.read(), request.headers.get('Content-Type'), **options)
-
-	uid = session['id']
-	self_user = user_manager.user(uid=uid, clear=CLEAR_NONE)
-
-	updated = False
-	if 'name' in prms:
-		self_user['name'] = prms['name']
-		updated = True
-	if 'new_password' in prms and (('current_password' in prms and self_user['password'] == prms['current_password']) or self_user['password'] == ''):
-		self_user['password'] = prms['new_password']
-		updated = True
-	if 'email' in prms:
-		newEmail = prms['email'].lower()
-		if newEmail != self_user['email']:
-			query = {
-				"email": {
-					"$exists": True,
-					"$eq": newEmail
-				}
-			}
-			existing_user = db.users.find_one(query)
-			if existing_user:
-				return jsonify({"code": 400, "alerts": [{"body": "Email already in use.", "title": ""}]})
-			else:
-				self_user['email'] = prms['email']
-				updated = True
-	if 'birth_year' in prms and 'birth_month' in prms and 'birth_day' in prms:
-		self_user['birthday'] = int(time.mktime(time.strptime('%s-%s-%s 12:00:00'%(prms['birth_year'], prms['birth_month'], prms['birth_day'] ), '%Y-%m-%d %H:%M:%S'))) - time.timezone
-		updated = True
-	if 'sex' in prms:
-		self_user['sex'] = prms['sex']
-		updated = True
-	if 'profile_image_data' in files:
-		f = files['profile_image_data']
-		save_user_profile_image(f.stream, uid)
-		updated = True
-
-	if updated:
-		user_manager.save(self_user)
-
-	rspns = {'code': 200,
-				"alerts": [{"body": "Your account have been saved.", "title": ""}],
-				'user': user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)}
-	return jsonify(rspns)
-
 @app.route('/api/activity/scanned_timeline.json', methods=['GET'])
 def activity_scanned_timeline():
 	'''
@@ -1553,7 +1580,7 @@ def communication_date_list():
 
 	return json_response(rspns)
 
-@app.route('/shopping/compare_price.json', methods=['GET', 'POST'])
+@app.route('/api/shopping/compare_price.json', methods=['GET', 'POST'])
 def shopping_compare_price():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
@@ -1609,7 +1636,7 @@ def communication_item_list():
 			rspns['item_categories'] = []
 	return json_response(rspns)
 
-@app.route('/communication/has_items.json', methods=['GET'])
+@app.route('/api/communication/has_items.json', methods=['GET'])
 def communication_has_items():
 	'''
 		item_class: 1 - items, 2 - date
@@ -1642,7 +1669,7 @@ def communication_has_items():
 			rspns['item_categories'] = []
 	return json_response(rspns)
 
-@app.route('/communication/do_gift.json', methods=['GET', 'POST'])
+@app.route('/api/communication/do_gift.json', methods=['GET', 'POST'])
 def communication_do_gift():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
@@ -1652,6 +1679,7 @@ def communication_do_gift():
 	try:
 		basic_item_id = int(prms.get('basic_item_id'))
 		kanojo_id = int(prms.get('kanojo_id'))
+		pod = int(prms.get('pod', get_server_part_of_day()))
 	except ValueError as e:
 		return json_response({ "code": 400 })
 
@@ -1666,8 +1694,9 @@ def communication_do_gift():
 	if 'love_increment' in do_gift and 'info' in do_gift:
 		tmp = do_gift.get('info', {})
 		prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
-		do_gift['love_increment']['reaction_word'] = f'{url}?{urllib.parse.urlencode(prms)}'
 		do_gift.pop('info', None)
+
+		rspns['kanojo_message'] = reactionword.reactionword_json([1], pod)
 	rspns.update(do_gift)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 	if kanojo.get('owner_user_id') != session['id']:
@@ -1676,7 +1705,7 @@ def communication_do_gift():
 		rspns['owner_user'] = user_manager.clear(self_user, CLEAR_OTHER, self_user=self_user)
 	return json_response(rspns)
 
-@app.route('/shopping/verify_tickets.json', methods=['GET', 'POST'])
+@app.route('/api/shopping/verify_tickets.json', methods=['GET', 'POST'])
 def shopping_verify_tickets():
 	"""
 		buy extend gift/date
@@ -1706,7 +1735,7 @@ def shopping_verify_tickets():
 	rspns.update(buy_present)
 	return json_response(rspns)
 
-@app.route('/communication/do_extend_gift.json', methods=['GET', 'POST'])
+@app.route('/api/communication/do_extend_gift.json', methods=['GET', 'POST'])
 def communication_do_extend_gift():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
@@ -1716,6 +1745,7 @@ def communication_do_extend_gift():
 	try:
 		extend_item_id = int(prms.get('extend_item_id'))
 		kanojo_id = int(prms.get('kanojo_id'))
+		pod = int(prms.get('pod', get_server_part_of_day()))
 	except ValueError as e:
 		return json_response({ "code": 400 })
 
@@ -1732,6 +1762,8 @@ def communication_do_extend_gift():
 		prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
 		give_present['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
 		give_present.pop('info', None)
+
+		rspns['kanojo_message'] = reactionword.reactionword_json([2], pod)
 	rspns.update(give_present)
 	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER, check_clothes=True)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
@@ -1741,16 +1773,16 @@ def communication_do_extend_gift():
 		rspns['owner_user'] = user_manager.clear(self_user, CLEAR_OTHER, self_user=self_user)
 	return json_response(rspns)
 
-@app.route('/communication/do_date.json', methods=['GET', 'POST'])
+@app.route('/api/communication/do_date.json', methods=['GET', 'POST'])
 def communication_do_date():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
 	prms = request.form if request.method == 'POST' else request.args
-	if 'basic_item_id' not in prms or 'kanojo_id' not in prms:
-		return json_response({ "code": 400 })
+
 	try:
 		basic_item_id = int(prms.get('basic_item_id'))
 		kanojo_id = int(prms.get('kanojo_id'))
+		pod = int(prms.get('pod', get_server_part_of_day()))
 	except ValueError as e:
 		return json_response({ "code": 400 })
 
@@ -1760,22 +1792,22 @@ def communication_do_date():
 
 	rspns = {'code':200,
 			'owner_user':user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)}
-	url = server_url() + 'web/reactionword.html'
 	do_date = user_manager.user_action(user=self_user, kanojo=kanojo, do_date=basic_item_id, is_extended_action=False)
 	if 'love_increment' in do_date and 'info' in do_date:
-		tmp = do_date.get('info', {})
-		prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
-		do_date['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
 		do_date.pop('info', None)
+
+		rspns['kanojo_message'] = reactionword.reactionword_json([3], pod)
 	rspns.update(do_date)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
 	if kanojo.get('owner_user_id') != session['id']:
 		rspns['owner_user'] = user_manager.user(uid=kanojo.get('owner_user_id'), clear=CLEAR_OTHER)
 	else:
 		rspns['owner_user'] = user_manager.clear(self_user, CLEAR_OTHER, self_user=self_user)
-	return json_response(rspns)
+	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user=self_user, clear=CLEAR_SELF)
+	return jsonify(rspns)
 
-@app.route('/communication/do_extend_date.json', methods=['GET', 'POST'])
+#Not sure if this is even possible to call TBH
+@app.route('/api/communication/do_extend_date.json', methods=['GET', 'POST'])
 def communication_do_extend_date():
 	if 'id' not in session:
 		return json_response({ "code": 401 })
@@ -1785,6 +1817,7 @@ def communication_do_extend_date():
 	try:
 		extend_item_id = int(prms.get('extend_item_id'))
 		kanojo_id = int(prms.get('kanojo_id'))
+		pod = int(prms.get('pod', get_server_part_of_day()))
 	except ValueError as e:
 		return json_response({ "code": 400 })
 
@@ -1794,13 +1827,11 @@ def communication_do_extend_date():
 
 	rspns = { 'code': 200 }
 	rspns['owner_user'] = user_manager.clear(owner_user, CLEAR_OTHER, self_user=self_user)
-	url = server_url() + 'web/reactionword.html'
-	do_date = user_manager.do_date(self_user, kanojo, extend_item_id)
+	do_date = user_manager.do_extended_date(self_user, kanojo, extend_item_id)
 	if 'love_increment' in do_date and 'info' in do_date:
-		tmp = do_date.get('info', {})
-		prms = { key: tmp[key] for key in ['pod', 'a'] if key in tmp }
-		do_date['love_increment']['reaction_word'] = '%s?%s'%(url, urllib.parse.urlencode(prms))
 		do_date.pop('info', None)
+
+		rspns['kanojo_message'] = reactionword.reactionword_json([4], pod)
 	rspns.update(do_date)
 	rspns['kanojo'] = kanojo_manager.clear(kanojo, self_user, clear=CLEAR_OTHER, check_clothes=True)
 	rspns['self_user'] = user_manager.clear(self_user, CLEAR_SELF, self_user=self_user)
@@ -1815,15 +1846,15 @@ def communication_do_extend_date():
 #@sched.scheduled_job('interval', minutes=10)
 def update_stamina_job():
 	for user in db.users.find():
-		if (user_manager.user_change(user, up_stamina=True, update_db_record=True)):
+		if user_manager.user_change(user, stamina_change=1, update_db_record=True):
 			print('Recover stamina \"%s\"(id:%d) Stamina:%d'%(user.get('name'), user.get('id'), user.get('stamina')))
 
 def test_job():
 	print(int(time.time()))
 
-# Update Stamina ever 2 minutes
+# Update Stamina ever 2.4 minutes
 sched = BackgroundScheduler()
-sched.add_job(update_stamina_job, 'interval', minutes=2, id='update_stamina_job', replace_existing=True)
+sched.add_job(update_stamina_job, 'interval', seconds=144, id='update_stamina_job', replace_existing=True)  #Original says "Stamina will recover automatically by 4 hours."
 #sched.add_job(test_job, 'interval', seconds=30)
 sched.start()
 atexit.register(lambda: sched.shutdown())

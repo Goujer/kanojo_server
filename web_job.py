@@ -1288,7 +1288,7 @@ def barcode_query():
 
 	prms = request.form if request.method == 'POST' else request.args
 	barcode = prms.get('barcode')
-	if barcode is None or (len(barcode) != 12 and len(barcode) != 13 and len(barcode) != 14): #If length of code is not 12-14 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
+	if barcode is None or (len(barcode) != 10 and len(barcode) != 12 and len(barcode) != 13 and len(barcode) != 14): #If length of code is not 10 or 12-14 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
 		return json_response({ "code": 400 })
 	session['barcode'] = barcode
 	kanojo = kanojo_manager.kanojo_by_barcode(barcode)

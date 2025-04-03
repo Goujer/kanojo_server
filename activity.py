@@ -143,7 +143,7 @@ class ActivityManager(object):
 			elif ACTIVITY_BECOME_NEW_LEVEL == at:
 				rv['activity'] = '{user_name} became Lev.\"{user_level}\".'
 			elif ACTIVITY_MARRIED == at:
-				rv['activity'] = '{user_name} get married with {kanojo_name}.'
+				rv['activity'] = '{user_name} has married {kanojo_name}.'
 			elif ACTIVITY_JOINED == at:
 				rv['activity'] = '{user_name} has joined.'
 			elif ACTIVITY_BREAKUP == at:

@@ -17,66 +17,77 @@ document.addEventListener("DOMContentLoaded", ready);
 //]]>	</script>
 	</head>
 	<body>
-		<div id="maincontent">
-			<!-- public other user profile -->
-			<h1 class="name_user">{{ name }}</h1>
-			<table cellpadding="0" cellspacing="0" border="0" width="100%"><tbody>
+		<table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#FFFFFF">
+			<tbody>
 				<tr valign="top">
-					<td width="116">
-						<div id="portrate" class="middle" style="background-image: url({{ profile_image_url }}); background-repeat: no-repeat; background-position: center; background-size: 100%; "></div>
-					</td>
-					<td>
-						<table cellpaddong="0" cellspacing="0" border="0" width="100%"><tbody>
-							<tr valign="top">
-								<td width="35%" class="user_info" style="color:#AAA;">Level</td>
-								<td width="65%" class="user_info">{{ level }}</td>
-							</tr>
-							<tr valign="top">
-								<td width="35%" class="user_info" style="color:#AAA;">Money</td>
-								<td width="65%" class="user_info">{{ money }}</td>
-							</tr>
-							<tr valign="top">
-								<td width="35%" class="user_info" style="color:#AAA;">Stamina</td>
-								<td width="65%" class="user_info"><div class="bb_indicator"><img src="/images/common/ind_blue.png" class="bb_indicator_bar" height="12" width="{{ stamina_percentage }}%" style="border-right:1px solid #999"></div></td>
-							</tr>
-							<tr valign="top" class="stripe">
-								<td width="35%" class="user_info" style="color:#AAA;">Enemies</td>
-								<td width="65%" class="user_info">{{ enemy_count }}</td>
-							</tr>
-							<tr valign="top">
-								<td width="35%" class="user_info" style="color:#AAA;">Kanojos</td>
-								<td width="65%" class="user_info">{{ kanojo_count }}</td>
-							</tr>
-							<tr valign="top">
-								<td width="35%" class="user_info" style="color:#AAA;">Friend Kanojos</td>
-								<td width="65%" class="user_info">{{ friend_count }}</td>
-							</tr>
-						</tbody></table>
+					<td id="sidebar"></td>
+					<td id="maincontent">
+						<!-- public other user profile -->
+						<h1 class="name_user">{{ name }}</h1>
+						<table cellpadding="0" cellspacing="0" border="0" width="100%">
+							<tbody>
+								<tr valign="top">
+									<td width="116">
+										<div id="portrate" class="middle" style="background-image: url({{ profile_image_url }}); background-repeat: no-repeat; background-position: center; background-size: 100%; ">
+											<img src="/profile_images/user/{{ id }}.jpg" alt="{{ name }}" style="width: 50px; height: 50px;">
+										</div>
+									</td>
+									<td>
+										<table cellpaddong="0" cellspacing="0" border="0" width="100%"><tbody>
+											<tr valign="top">
+												<td width="35%" class="user_info" style="color:#AAA;">Level</td>
+												<td width="65%" class="user_info">{{ level }}</td>
+											</tr>
+											<tr valign="top">
+												<td width="35%" class="user_info" style="color:#AAA;">Money</td>
+												<td width="65%" class="user_info">{{ money }}</td>
+											</tr>
+											<tr valign="top">
+												<td width="35%" class="user_info" style="color:#AAA;">Stamina</td>
+												<td width="65%" class="user_info"><div class="bb_indicator"><img src="/images/common/ind_blue.png" class="bb_indicator_bar" height="12" width="{{ stamina_percentage }}%" style="border-right:1px solid #999"></div></td>
+											</tr>
+											<tr valign="top" class="stripe">
+												<td width="35%" class="user_info" style="color:#AAA;">Enemies</td>
+												<td width="65%" class="user_info">{{ enemy_count }}</td>
+											</tr>
+											<tr valign="top">
+												<td width="35%" class="user_info" style="color:#AAA;">Kanojos</td>
+												<td width="65%" class="user_info">{{ kanojo_count }}</td>
+											</tr>
+											<tr valign="top">
+												<td width="35%" class="user_info" style="color:#AAA;">Friend Kanojos</td>
+												<td width="65%" class="user_info">{{ friend_count }}</td>
+											</tr>
+										</tbody></table>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<h1 class="corner_name">Kanojos</h1>
+			{% if len_zero(kanojos) %}<div class="msg_small_alert">User doesn't have kanojos.</div>{% else %}
+			{% for k in kanojos %}{% if is_dict(k) %}			<span>
+							<a href="/kanojo/{{ k.id }}.html">
+								<img class="icon" src="/profile_images/kanojo/{{ k.id }}/icon.png" alt="{{ k.name }}" style="width: 50px; height: 50px;">
+							</a>
+						</span>
+			{% endif %}{% endfor %}
+			{% endif %}
+						<h1 class="corner_name">Enemies</h1>
+			{% if len_zero(enemies) %}<div class="msg_small_alert">User doesn't have enemies.</div>{% else %}
+			{% for e in enemies %}{% if is_dict(e) %}			<span>
+							<a href="/user/{{ e.id }}.html">
+								<img class="icon" src="/profile_images/user/{{ e.id }}.jpg" alt="{{ e.name }}" style="width: 50px; height: 50px;">
+							</a>
+						</span>
+			{% endif %}{% endfor %}
+			{% endif %}
+
+						<h1 class="corner_name">Latest activities</h1>
+			{{ activities_html | safe }}
 					</td>
 				</tr>
-			</tbody></table>
-			
-			<h1 class="corner_name">Kanojos</h1>
-{% if len_zero(kanojos) %}<div class="msg_small_alert">User doesn't have kanojos.</div>{% else %}
-{% for k in kanojos %}{% if is_dict(k) %}			<span>
-				<a href="/kanojo/{{ k.id }}.html">
-					<img class="icon" src="{{ k.profile_image_url }}" alt="{{ k.name }}" style="width: 50px; height: 50px;">
-				</a>
-			</span>
-{% endif %}{% endfor %}
-{% endif %}
-			<h1 class="corner_name">Enemies</h1>
-{% if len_zero(enemies) %}<div class="msg_small_alert">User doesn't have enemies.</div>{% else %}
-{% for e in enemies %}{% if is_dict(e) %}			<span>
-				<a href="/user/{{ e.id }}.html">
-					<img class="icon" src="{{ e.profile_image_url }}" alt="{{ e.name }}" style="width: 50px; height: 50px;">
-				</a>
-			</span>
-{% endif %}{% endfor %}
-{% endif %}
-
-			<h1 class="corner_name">Latest activities</h1>
-{{ activities_html | safe }}
-		</div>
+			</tbody>
+		</table>
 	</body>
 </html>

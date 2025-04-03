@@ -38,7 +38,7 @@ function create_activity_box(activity) {
   l_activities_box.appendChild(tmp_el);
   if (activity.activity_type == 2) {
     tmp_el.setAttribute('href', activity.kanojo_url);
-	tmp_el2.setAttribute('src', '/profile_images/kanojo/' + activity.kanojo.id + '.png');
+	tmp_el2.setAttribute('src', '/profile_images/kanojo/' + activity.kanojo.id + '/icon.png');
   } else {
     tmp_el.setAttribute('href', activity.user_url);
 	tmp_el2.setAttribute('src', '/profile_images/user/' + activity.user.id + '.jpg');
@@ -56,7 +56,7 @@ function create_activity_box(activity) {
     tmp_el.appendChild(tmp_el2);
     r_activities_box.appendChild(tmp_el);
     tmp_el.setAttribute('href', activity.kanojo_url);
-	tmp_el2.setAttribute('src', '/profile_images/kanojo/' + activity.kanojo.id + '.png');
+	tmp_el2.setAttribute('src', '/profile_images/kanojo/' + activity.kanojo.id + '/icon.png');
   } else if ([103].indexOf(activity.activity_type) > -1) {
     r_activities_box = document.createElement('div');
     r_activities_box.className = 'r_activities_box';

@@ -31,7 +31,9 @@ from thread_post import Post
 from user import *
 
 if config.USE_HTTPS:
-	context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+	context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+	context.minimum_version = ssl.TLSVersion.TLSv1_2
+	context.minimum_version = ssl.TLSVersion.TLSv1_3
 	context.load_cert_chain(config.SSL_CERTIFICATE_FILE, keyfile=config.SSL_PRIVATEKEY_FILE)
 
 app = Flask(__name__)
@@ -1128,28 +1130,28 @@ def activity_usertimeline():
 
 
 	#return json_response({"code": 200, "activities": []})
-	data = {"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": False, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": None, "advertising_product_title": None, "recognition": 11}, "product": None, "user": {"friend_count": 0, "tickets": 20, "name": "everyone", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 2, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}
-	return json_response(data)
-	data = json.dumps(data)
-	data = '''{"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": null, "in_room": true, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": true, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": null, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": false, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": null, "advertising_product_title": null, "recognition": 11}, "product": null, "user": {"friend_count": 0, "tickets": 5, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}'''
-	from gzip import GzipFile
-	from io import BytesIO
-	gzip_buffer = BytesIO()
-	with GzipFile(mode='wb',
-					compresslevel=6,
-					fileobj=gzip_buffer) as gzip_file:
-		gzip_file.write(data)
-	response = Response()
-	response.data = gzip_buffer.getvalue()
-	response.headers['Content-Encoding'] = 'gzip'
-	response.headers['Content-Length'] = response.content_length
-	response.headers['Vary'] = 'Accept-Encoding'
-	response.headers['Server'] = 'Apache'
-	response.headers['Cache-Control'] = 'max-age=0, no-cache'
-	response.headers['Keep-Alive'] = 'timeout=2, max=100'
-	response.headers['X-Mod-Pagespeed'] = '1.6.29.7-3566'
-	response.headers['Connection'] = 'Keep-Alive'
-	return response
+	# data = {"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": None, "in_room": True, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": True, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": None, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": False, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": None, "advertising_product_title": None, "recognition": 11}, "product": None, "user": {"friend_count": 0, "tickets": 20, "name": "everyone", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": False, "profile_image_url": None, "sex": "not sure", "stamina": 100, "twitter_connect": False, "birth_month": 10, "id": 2, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": None, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}
+	# return json_response(data)
+	# data = json.dumps(data)
+	# data = '''{"activities": [{"kanojo": {"mascot_enabled": "0", "avatar_background_image_url": null, "in_room": true, "mouth_type": 1, "skin_color": 2, "body_type": 1, "race_type": 10, "spot_type": 1, "birth_day": 12, "sexual": 61, "id": 1, "relation_status": 2, "clothes_type": 3, "brow_type": 10, "consumption": 17, "like_rate": 0, "eye_position": 0, "source": "", "location": "Somewhere", "birth_month": 10, "follower_count": 1, "goods_button_visible": true, "accessory_type": 1, "birth_year": 2014, "status": "Born in  12 Oct 2014 @ Somewhere. Area: Italy. 1 users are following.\nShe has relationship with id:1", "hair_type": 3, "clothes_color": 3, "ear_type": 1, "brow_position": 0, "barcode": "8028670007619", "love_gauge": 50, "profile_image_url": "https://192.168.1.19/profile_images/kanojo/1.png?w=88&h=88&face=true", "possession": 11, "eye_color": 5, "glasses_type": 1, "hair_color": 23, "face_type": 3, "nationality": "Italy", "advertising_product_url": null, "geo": "0.0000,0.0000", "emotion_status": 50, "voted_like": false, "eye_type": 101, "mouth_position": 0, "name": "\\u30f4\\u30a7\\u30eb\\u30c7", "fringe_type": 22, "nose_type": 1, "advertising_banner_url": null, "advertising_product_title": null, "recognition": 11}, "product": null, "user": {"friend_count": 0, "tickets": 5, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "other_user": {"friend_count": 0, "tickets": 20, "name": "id:1", "language": "en", "level": 1, "kanojo_count": 1, "money": 0, "stamina_max": 100, "facebook_connect": false, "profile_image_url": null, "sex": "not sure", "stamina": 100, "twitter_connect": false, "birth_month": 10, "id": 1, "birth_day": 11, "enemy_count": 0, "scan_count": 0, "email": null, "relation_status": 2, "birth_year": 2014, 'description': '', 'generate_count': 0, 'password': ''}, "activity": "AKI approached dsad.", "created_timestamp": 1413382843, "id": 16786677, "activity_type": 7}], "code": 200}'''
+	# from gzip import GzipFile
+	# from io import BytesIO
+	# gzip_buffer = BytesIO()
+	# with GzipFile(mode='wb',
+	# 				compresslevel=6,
+	# 				fileobj=gzip_buffer) as gzip_file:
+	# 	gzip_file.write(data)
+	# response = Response()
+	# response.data = gzip_buffer.getvalue()
+	# response.headers['Content-Encoding'] = 'gzip'
+	# response.headers['Content-Length'] = response.content_length
+	# response.headers['Vary'] = 'Accept-Encoding'
+	# response.headers['Server'] = 'Apache'
+	# response.headers['Cache-Control'] = 'max-age=0, no-cache'
+	# response.headers['Keep-Alive'] = 'timeout=2, max=100'
+	# response.headers['X-Mod-Pagespeed'] = '1.6.29.7-3566'
+	# response.headers['Connection'] = 'Keep-Alive'
+	# return response
 
 #http://www.barcodekanojo.com/profile_images/kanojo/625028/1289899377/non.png?w=50&h=50&face=true
 @app.route('/profile_images/kanojo/<kid>/<crop>.png', methods=['GET'])
@@ -1288,7 +1290,16 @@ def barcode_query():
 
 	prms = request.form if request.method == 'POST' else request.args
 	barcode = prms.get('barcode')
-	if barcode is None or (len(barcode) != 10 and len(barcode) != 12 and len(barcode) != 13 and len(barcode) != 14): #If length of code is not 10 or 12-14 the code is not a proper product barcode, app should convert 8 digit barcodes to appropriate lengths.
+	barcode_format = prms.get('format')
+	'''
+	8 Digit = UPC-E and EAN-8
+	10 Digit = Amazon ASIN in Code-128 Format
+	12 Digit = UPC-A
+	13 Digit = EAN-13
+	14 Digit = GTIN-14 (Not sure encoding but supposedly they exist)
+	18 Digit = ISBN EAN-13 + 5 digit price metadata
+	'''
+	if barcode is None or not (len(barcode) == 8 or len(barcode) == 10 or len(barcode) == 12 or len(barcode) == 13 or len(barcode) == 14 or len(barcode) == 18):
 		return json_response({ "code": 400 })
 	session['barcode'] = barcode
 	kanojo = kanojo_manager.kanojo_by_barcode(barcode)
@@ -1303,7 +1314,7 @@ def barcode_query():
 			"messages": {
 				"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user.",
 				"inform_girlfriend": "She is your KANOJO, and you have scanned this barcode 0 times.",
-				"inform_friend": "She belongs to , and you have scanned this barcode 0times.",
+				"inform_friend": "She belongs to , and you have scanned this barcode 0 times.",
 				"do_generate_kanojo": "Would you like to generate this KANOJO?\nIt requires 20 stamina.",
 				"do_add_friend": "She belongs to no one.\nDo you want to add her on your friend list ? It requires 5 stamina."
 			},

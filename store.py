@@ -249,7 +249,7 @@ if __name__ == "__main__":
 	#pprint.pprint(dt)
 	#print json.dumps(dt)
 
-	user = {"facebook_connect": False, "money": 0, "sex": "male", "create_time": 1413019326, "likes": [], "id": 1, "description": None, "uuid": ["test_uuid"], "stamina": 100, "kanojos": [1, 368], "email": None, "twitter_connect": False, "generate_count": 0, "profile_image_url": "http://www.deviantsart.com/2oo69ib.jpg", "birthday": 1413025200, "enemies": [], "password": None, "friends": [231, 31, 149, 333, 335, 336, 337, 339, 30, 220, 361], "tickets": 20, "name": "everyone", "language": "en", "level": 1, "scan_count": 0, "has_items": [{"store_item_id": 153}, {"store_item_id": 102, "units": 2}]}
+	user = {"facebook_connect": False, "money": 0, "sex": "male", "create_time": 1413019326, "likes": [], "id": 1, "description": None, "uuid": ["test_uuid"], "stamina": 100, "kanojos": [1, 368], "email": None, "generate_count": 0, "profile_image_url": "http://www.deviantsart.com/2oo69ib.jpg", "birthday": 1413025200, "enemies": [], "password": None, "friends": [231, 31, 149, 333, 335, 336, 337, 339, 30, 220, 361], "tickets": 20, "name": "everyone", "language": "en", "level": 1, "scan_count": 0, "has_items": [{"store_item_id": 153}, {"store_item_id": 102, "units": 2}]}
 	#print json.dumps(sm.goods_list(KANOJO_OWNER, filter_has_items=True, has_items=user.get('has_items')))
 	#print json.dumps(user)
 

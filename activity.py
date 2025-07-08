@@ -20,7 +20,7 @@ CLEAR_SELF = 1
 FILL_TYPE_PLAIN = 0
 FILL_TYPE_HTML = 1
 
-ALL_ACTIVITIES = (ACTIVITY_SCAN, ACTIVITY_GENERATED, ACTIVITY_ME_ADD_FRIEND, ACTIVITY_APPROACH_KANOJO, ACTIVITY_ME_STOLE_KANOJO, ACTIVITY_MY_KANOJO_STOLEN, ACTIVITY_MY_KANOJO_ADDED_TO_FRIENDS, ACTIVITY_BECOME_NEW_LEVEL, ACTIVITY_MARRIED, ACTIVITY_JOINED, ACTIVITY_BREAKUP)
+ALL_ACTIVITIES = (ACTIVITY_SCAN, ACTIVITY_GENERATED, ACTIVITY_ME_ADD_FRIEND, ACTIVITY_APPROACH_KANOJO, ACTIVITY_ME_STOLE_KANOJO, ACTIVITY_MY_KANOJO_STOLEN, ACTIVITY_MY_KANOJO_ADDED_TO_FRIENDS, ACTIVITY_BECOME_NEW_LEVEL, ACTIVITY_MARRIED, ACTIVITY_JOINED, ACTIVITY_BREAKUP, ACTIVITY_ADD_AS_ENEMY)
 
 class ActivityManager(object):
 	"""docstring for ActivityManager"""
@@ -34,6 +34,7 @@ class ActivityManager(object):
 				'id': 0
 			})
 
+	# Adds new activity to the database
 	def create(self, activity_info):
 		'''
 				{
@@ -71,26 +72,33 @@ class ActivityManager(object):
 
 		activity['id'] = aid
 		activity['created_timestamp'] = int(time.time())
+
+		# Main User/owner user
 		if 'user' in activity_info:
 			if isinstance(activity_info.get('user'), dict):
 				activity['user'] = activity_info.get('user').get('id')
 			else:
 				activity['user'] = activity_info.get('user')
+
+		# Usually enemy user interacting with kanojo
 		if 'other_user' in activity_info:
 			if isinstance(activity_info.get('other_user'), dict):
 				activity['other_user'] = activity_info.get('other_user').get('id')
 			else:
 				activity['other_user'] = activity_info.get('other_user')
 
+		# Kanojo in question
 		if 'kanojo' in activity_info:
 			if isinstance(activity_info.get('kanojo'), dict):
 				activity['kanojo'] = activity_info.get('kanojo').get('id')
 			else:
 				activity['kanojo'] = activity_info.get('kanojo')
 
+		# Product of Kanojo not sure if this is the dict or what
 		if 'product' in activity_info:
 			activity['product'] = activity_info.get('product')
 
+		# String supplied with activity
 		if 'activity' in activity_info:
 			activity['activity'] = activity_info.get('activity')
 
@@ -141,13 +149,13 @@ class ActivityManager(object):
 			elif ACTIVITY_MY_KANOJO_ADDED_TO_FRIENDS == at:
 				rv['activity'] = '{other_user_name} added {kanojo_name} to friend list.'
 			elif ACTIVITY_BECOME_NEW_LEVEL == at:
-				rv['activity'] = '{user_name} became Lev.\"{user_level}\".'
+				rv['activity'] = '{user_name} became Lvl.\"{user_level}\".'
 			elif ACTIVITY_MARRIED == at:
 				rv['activity'] = '{user_name} has married {kanojo_name}.'
 			elif ACTIVITY_JOINED == at:
 				rv['activity'] = '{user_name} has joined.'
 			elif ACTIVITY_BREAKUP == at:
-				rv['activity'] = '{user_name} break up with {kanojo_name}.'
+				rv['activity'] = '{user_name} broke up with {kanojo_name}.'
 				rv['activity_type'] = ACTIVITY_ME_ADD_FRIEND
 				rv['activity_type2'] = ACTIVITY_BREAKUP
 			elif ACTIVITY_ADD_AS_ENEMY == at:
@@ -183,6 +191,22 @@ class ActivityManager(object):
 				],
 			}
 			rv = self.activities_by_query(query, skip=skip, limit=limit, user_id=user_id)
+		return rv
+
+	# Return all activities related to the kanojo within the defined set
+	def kanojo_activities(self, kanojo_id, skip=0, limit=6):
+		rv = []
+		if self._db:
+			activity_types = copy.copy(list(ALL_ACTIVITIES))
+			activity_types.remove(ACTIVITY_BECOME_NEW_LEVEL)
+			activity_types.remove(ACTIVITY_JOINED)
+			activity_types.remove(ACTIVITY_ADD_AS_ENEMY)
+
+			query = {
+				'kanojo': kanojo_id,
+				'activity_type': { '$in': activity_types }
+			}
+			rv = self.activities_by_query(query, skip=skip, limit=limit)
 		return rv
 
 	def user_activities_4html(self, user_id, skip=0, limit=6):

@@ -1072,7 +1072,7 @@ def activity_usertimeline():
 			02 - ("Violet was generated from 星光産業 .")
 			05 - Me add new friend ("Filter added 葵 to friend list.")
 			07 - approached my kanojo  ("KH approached めりい.")
-			08 - me stole kanojo ("Devourer stole うる from Nobody.")
+			08 - I stole kanojo ("Devourer stole うる from Nobody.")
 			09 - my kanojo was stollen ("ふみえ was stolen by Nobody.")
 			10 - other user added my kanojo ("呪いのBlu-ray added ぽいと to friend list.")
 			11 - ("Everyone became Lev.\"99\".")
@@ -1109,10 +1109,10 @@ def activity_usertimeline():
 
 	activities = activity_manager.user_activity(user_id=user_id, skip=index, limit=limit)
 	uids = activity_manager.user_ids(activities)
-	kids = activity_manager.kanojo_ids(activities)
+	kanojo_ids = activity_manager.kanojo_ids(activities)
 
 	self_user = user_manager.user(uid=self_uid, clear=CLEAR_NONE)
-	kanojos = kanojo_manager.kanojos(kids, self_user, clear=CLEAR_NONE)
+	kanojos = kanojo_manager.kanojos(kanojo_ids, self_user=self_user, clear=CLEAR_NONE)
 
 	user_ids = kanojo_manager.kanojos_owner_users(kanojos)
 	if user_ids:
@@ -1283,6 +1283,7 @@ def web_i():
 	val = {}
 	return render_template('index_m.html', **val)
 
+# Checks if Kanojo for barcode exists or not
 @app.route('/api/barcode/query.json', methods=['GET', 'POST'])
 def barcode_query():
 	if 'id' not in session:
@@ -1291,15 +1292,14 @@ def barcode_query():
 	prms = request.form if request.method == 'POST' else request.args
 	barcode = prms.get('barcode')
 	barcode_format = prms.get('format')
+	barcode_extension = prms.get('extension')
 	'''
 	8 Digit = UPC-E and EAN-8
 	10 Digit = Amazon ASIN in Code-128 Format
-	12 Digit = UPC-A
-	13 Digit = EAN-13
-	14 Digit = GTIN-14 (Not sure encoding but supposedly they exist)
-	18 Digit = ISBN EAN-13 + 5 digit price metadata
+	12 Digit = UPC-A, MakeShip Plushy Code-128
+	13 Digit = EAN-13, MakeShip Plushy Code-128
 	'''
-	if barcode is None or not (len(barcode) == 8 or len(barcode) == 10 or len(barcode) == 12 or len(barcode) == 13 or len(barcode) == 14 or len(barcode) == 18):
+	if barcode is None or not (len(barcode) == 8 or len(barcode) == 10 or len(barcode) == 12 or len(barcode) == 13):
 		return json_response({ "code": 400 })
 	session['barcode'] = barcode
 	kanojo = kanojo_manager.kanojo_by_barcode(barcode)
@@ -1356,7 +1356,7 @@ def barcode_query():
 		rspns['messages'] = {
 			"notify_amendment_information": "This information is already used by other users.\nIf your amendment would be incorrect, you will be restricted user.",
 			"inform_girlfriend": "She is your KANOJO.",
-			"inform_friend": f"She belongs to {owner_user.get('name')}, and your friend.",
+			"inform_friend": f"She belongs to {owner_user.get('name')}, and is your friend.",
 			"do_generate_kanojo": "Would you like to generate this KANOJO?\nIt requires 20 stamina.",
 			"do_add_friend": f"She belongs to {owner_user.get('name')}.\nDo you want to add her on your friend list? It requires 0 stamina."
 		}
@@ -1463,12 +1463,12 @@ def barcode_scan_and_generate():
 
 	return jsonify(rspns)
 
+# Activity list for a kanojo (old)
 @app.route('/api/activity/scanned_timeline.json', methods=['GET'])
 def activity_scanned_timeline():
-	'''
-	'''
 	if 'id' not in session:
 		return json_response({ "code": 401 })
+
 	prms = request.args
 	if 'barcode' not in prms or 'index' not in prms and 'limit' not in prms:# or not prms.has_key('since_id'):
 		return json_response({ "code": 400 })
@@ -1476,11 +1476,50 @@ def activity_scanned_timeline():
 	try:
 		index = int(prms.get('index'))
 		limit = int(prms.get('limit'))
+		since_id = int(prms.get('since_id'))
 	except ValueError as e:
 		return json_response({ "code": 400 })
-	# TODO: logic
+
+	#activities = kanojo_activities()
+
 	rspns = { 'code': 200 }
 	rspns['activities'] = []
+	return json_response(rspns)
+
+# Activity list for a kanojo
+@app.route('/api/activity/kanojo_timeline.json', methods=['GET'])
+def activity_kanojo_timeline():
+	if 'id' not in session:
+		return json_response({ "code": 401 })
+
+	prms = request.args
+	if 'kanojo_id' not in prms or 'index' not in prms and 'limit' not in prms:
+		return json_response({ "code": 400 })
+	self_user_id = session['id']
+	try:
+		kanojo_id = int(prms.get('kanojo_id'))
+		index = int(prms.get('index'))
+		limit = int(prms.get('limit'))
+	except ValueError as e:
+		return json_response({ "code": 400 })
+
+	activities = activity_manager.kanojo_activities(kanojo_id, skip=index, limit=limit)
+	uids = activity_manager.user_ids(activities)
+	kids = activity_manager.kanojo_ids(activities)  #TODO There should only be one Kanojo, so this is overkill
+
+	self_user = user_manager.user(uid=self_user_id, clear=CLEAR_NONE)
+	kanojos = kanojo_manager.kanojos(kids, self_user=self_user, clear=CLEAR_NONE)
+
+	user_ids = kanojo_manager.kanojos_owner_users(kanojos)
+	if user_ids:
+		uids.extend(user_ids)
+		uids = list(set(uids))  # TODO WTF is this doing?
+
+	users = user_manager.users(uids, self_user=self_user)
+	kanojos = kanojo_manager.fill_owners_info(kanojos, owner_users=users, self_user=self_user)
+
+	rspns = { 'code': 200 }
+	rspns['activities'] = activity_manager.fill_activities(activities, users, kanojos, user_manager.default_user, kanojo_manager.default_kanojo)
 	return json_response(rspns)
 
 @app.route('/api/barcode/update.json', methods=['POST'])
@@ -1500,6 +1539,7 @@ def barcode_update():
 	if prms.get('barcode') is None:
 		return json_response({"code": 400})
 	barcode = prms.get('barcode')
+
 	kanojo = kanojo_manager.kanojo_by_barcode(barcode)
 
 	if kanojo is None or len(kanojo) == 0:
@@ -1523,7 +1563,6 @@ def barcode_update():
 			rspns['alerts'] = [{"body": "KANOJO data could not be saved.", "title": "Internal Server Error"}]
 
 	return json_response(rspns)
-
 
 @app.route('/api/communication/store_items.json', methods=['GET'])
 def communication_store_items():
